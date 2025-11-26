@@ -1,0 +1,46 @@
+{
+  "name": "Catálogo portátil de Artículos CPSnoopy \"De todo un poco\"",
+  "short_name": "Catálogo CPSnoopy",
+  "description": "Catálogo portátil de artículos para compradores",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "categories": ["business", "shopping"],
+  "background_color": "#2c3e50",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait",
+  "fullscreen": true,
+  "scope": "/",
+  "prefer_related_applications": false,
+  "features": [
+    "cross-origin-isolated",
+    "web-share"
+  ],
+  "icons": [
+    {
+      "src": "./images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./images/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "./images/screenshot-desktop.png", 
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

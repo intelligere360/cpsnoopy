@@ -1,0 +1,276 @@
+[
+    {
+        "id": 1,
+        "nombre": "Juego de Empaque para Ford 200",
+        "categoria": "Automotriz",
+        "precioMin": 140.0,
+        "precioMax": 140.0,
+        "descripcion": "Conjunto de juntas y sellos para el motor que garantiza el sellado entre componentes y previene fugas de fluidos como aceite, refrigerante y aire.",
+        "especificaciones": "; Marca Fraco; Juegos completos que cubren todas las juntas y sellos del motor; Juntas específicas como la de la tapa de la cadena de distribución",
+        "nuevo": true,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "15T248E4qQZvHY5nLZO_TIbuYlKFHKvE2",
+                "nombre": "1_1.jpg",
+                "principal": true,
+                "orden": 1
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "nombre": "Cauchos Usados All-Terrain LT 265/70/R17",
+        "categoria": "Automotriz",
+        "precioMin": 200.0,
+        "precioMax": 200.0,
+        "descripcion": "4 Cauchos Usados All-Terrain LT 265/70/R17.",
+        "especificaciones": "; Juego completo que cubren todas las juntas y sellos del motor; Juntas específicas; Tapa como de la cadena de distribución",
+        "nuevo": false,
+        "imageCount": 3,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1UyzCyHVrBu9b1e0TWn-gvnZpT8TvjJfq",
+                "nombre": "2_1.jpg",
+                "principal": false,
+                "orden": 1
+            },
+            {
+                "id": "17YG2BKj_6cvjjNxbUaSpNJbcFpTNrYEj",
+                "nombre": "2_2.jpg",
+                "principal": true,
+                "orden": 2
+            },
+            {
+                "id": "1_sTKov4gQ5ymBJvrIRilw26uE4ayJNUJ",
+                "nombre": "2_3.jpg",
+                "principal": false,
+                "orden": 3
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "nombre": "Calentador de Agua",
+        "categoria": "Electrodomésticos",
+        "precioMin": 120.00,
+        "precioMax": 120.00,
+        "descripcion": "Calentador de Agua a Gas de 7 Litros; Marca Haier; Voltate: DC3V; Tiene interruptor de ahorro de energía; No es eléctrico; Usa batería de 12V",
+        "especificaciones": "; Marca Haier",
+        "nuevo": true,
+        "imageCount": 3,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1c-ztC2lKIOGWOic8O07myEb9yqtc9JZ7",
+                "nombre": "3_1.jpg",
+                "principal": true,
+                "orden": 1
+            },
+            {
+                "id": "1JpTziBYGzYrmWE1rTkogCA0eIfDAZxOL",
+                "nombre": "3_2.jpg",
+                "principal": false,
+                "orden": 2
+            },
+            {
+                "id": "1kIyTy788OdezrP6dPv3JeGTRiItBqSMk",
+                "nombre": "3_3.jpg",
+                "principal": false,
+                "orden": 3
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "nombre": "Cauchos Firestone Destination",
+        "categoria": "Automotriz",
+        "precioMin": 90.00,
+        "precioMax": 90.00,
+        "descripcion": "2 Cauchos Firestone Destination",
+        "especificaciones": "; Usados y en buen estado; Uno solo va con Rin 16",
+        "nuevo": false,
+        "imageCount": 2,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1dX2KROC1i5jGby4cMNYBNwZFxa2tAupY",
+                "nombre": "4_1.jpg",
+                "principal": true,
+                "orden": 1
+            },
+            {
+                "id": "1OddkaJCkqsThYK7lVOoJVOIv5KLS7HQP",
+                "nombre": "4_2.jpg",
+                "principal": false,
+                "orden": 2
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "nombre": "Mueble vitrina de madera",
+        "categoria": "Hogar",
+        "precioMin": 90.00,
+        "precioMax": 90.00,
+        "descripcion": "Mueble vitrina de madera con 4 niveles.",
+        "especificaciones": "; Madera de pino; Acabado barnizado; Puertas superiores de vidrio; Espacio para Televisor",
+        "nuevo": false,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1TGzpY59sJNMbPQZkbVyAkePCanaeSZK0",
+                "nombre": "5_1.jpg",
+                "principal": true,
+                "orden": 1
+            }
+        ]
+    },
+    {
+        "id": 6,
+        "nombre": "Tablero eléctrico con brackets",
+        "categoria": "Electricidad",
+        "precioMin": 62.00,
+        "precioMax": 62.00,
+        "descripcion": "Un Tablero eléctrico de 8 espacios con 4 brackets incluidos.",
+        "especificaciones": "; 2 Brackets Simples de 20 Amp; 1 Brackets Doble de 30 Amp; 1 Brackets Doble de 40 Amp; 1 Tablero Eléctrico de 8 Espacios",
+        "nuevo": false,
+        "imageCount": 2,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1meM1jR3Wytykc0DC0HQ0K6uFwU5CTG6e",
+                "nombre": "6_1.jpg",
+                "principal": true,
+                "orden": 1
+            },
+            {
+                "id": "10wAtXq3CdMrDNvkpkTZE-mIp12spISPT",
+                "nombre": "6_2.jpg",
+                "principal": false,
+                "orden": 2
+            }
+        ]
+    },
+    {
+        "id": 7,
+        "nombre": "Máquina de ejercicios abdominales Ab King Pro",
+        "categoria": "Ejercicios",
+        "precioMin": 300.00,
+        "precioMax": 300.00,
+        "descripcion": "Máquina de ejercicios abdominales Ab King Pro para tonificar y fortalecer los músculos abdominales superiores, medios e inferiores, así como los oblicuos.",
+        "especificaciones": "; Estructura de acero resistente; Asiento acolchonado; Resistencia ajustable; Proporciona soporte para el cuello y la espalda; Ayuda a mantener una postura correcta y reduce la tensión durante los abdominales; La máquina ofrece un rango de movimiento de 200 grados; Cuenta con niveles de resistencia ajustables para adaptarse a diferentes niveles de condición física",
+        "nuevo": false,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1o3uE6OYVM8KPohulkKC4CNXG455hB25h",
+                "nombre": "7_1.jpg",
+                "principal": true,
+                "orden": 1
+            }
+        ]
+    },
+    {
+        "id": 8,
+        "nombre": "Plataforma vibratoria para ejercicios Crazy Fit Massager o Iron Fit",
+        "categoria": "Ejercicios",
+        "precioMin": 150.00,
+        "precioMax": 150.00,
+        "descripcion": "Plataforma vibratoria para ejercicios cardiovasculares en casa.",
+        "especificaciones": "; Favorece el adelgazamiento y mejorar la circulación sanguínea y el metabolismo; Cuenta con una plataforma amplia para diversos ejercicios de pie o sentado y asas de apoyo para mayor estabilidad; La consola suele incluir una pantalla LED que muestra información como la velocidad; el tiempo y las calorías; El plástico de la pizarra tiene un desperfecto que no está bien pegado",
+        "nuevo": false,
+        "imageCount": 2,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1XHozVhRxp7a5hbEOTYqx0vdwQAMpVg1L",
+                "nombre": "8_1.jpg",
+                "principal": true,
+                "orden": 1
+            },
+            {
+                "id": "1WMZl4ipG51z1pW51R7PfTJDCSvYZzPhL",
+                "nombre": "8_2.jpg",
+                "principal": false,
+                "orden": 2
+            }
+        ]
+    },
+    {
+        "id": 9,
+        "nombre": "Batería acústica pequeña, de nivel básico, marca DSW",
+        "categoria": "Instrumentos Musicales",
+        "precioMin": 920.00,
+        "precioMax": 920.00,
+        "descripcion": "Se trata de una batería de cuatro piezas, compuesta por bombo, caja, tom aéreo y tom de piso.",
+        "especificaciones": "; Los tambores tienen un acabado granate o rojo con parches blancos;  1 único platillo y un taburete de batería",
+        "nuevo": false,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1x-vWoYGFIdGIY9hCJDfK9Gt-MKgg_ynd",
+                "nombre": "9_1.jpg",
+                "principal": true,
+                "orden": 1
+            }
+        ]
+    },
+    {
+        "id": 10,
+        "nombre": "Contactor de CA Sassin 3SC8-F115",
+        "categoria": "Electricidad",
+        "precioMin": 60.00,
+        "precioMax": 60.00,
+        "descripcion": "Es un componente eléctrico utilizado para controlar circuitos de potencia.",
+        "especificaciones": "; Soporta 250 Amp; Se utiliza principalmente para controlar motores trifásicos y otros circuitos de potencia, incluyendo aplicaciones de aislamiento, conmutación de condensadores e iluminación; El dispositivo cumple con la norma internacional IEC 60947-4-1; Está disponible para varias corrientes y tensiones nominales, diseñadas para uso industrial y residencial",
+        "nuevo": false,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "12Qby4oqcKPM3SNXyIowH8fTrHfm8sPEc",
+                "nombre": "10_1.jpg",
+                "principal": true,
+                "orden": 1
+            }
+        ]
+    },
+    {
+        "id": 18,
+        "nombre": "Moto jueguete de 4 ruedas para niños \"Sport 35 VKS\".",
+        "categoria": "Juguetes",
+        "precioMin": 400.00,
+        "precioMax": 400.00,
+        "descripcion": "Moto jueguete de 4 ruedas para niños \"Sport 35 VKS\" o \"ATV Toy (Red & Gray)\", ideal para diversión al aire libre.",
+        "especificaciones": "; Diseñado normalmente para niños de entre 4 y 15 años; Soporta pesos de hasta 18 kg a 45 kg; Motor potente; Batería con tiempo de recarga de 6 a 7 horas; Tiempo de juego de 1 a 2 horas; La velocidad potencial del ATV oscila entre 3 y 7 km/h; Control remoto para padres; Diseño seguro y resistente; Colores rojo y gris",
+        "nuevo": false,
+        "imageCount": 3,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1lDlZT17QBn2NIrhk5bW1_UewqbpC_Dcy",
+                "nombre": "18_1.jpg",
+                "principal": false,
+                "orden": 1
+            },
+            {
+                "id": "1e33_LKfoQ3ulocudUy_Q3vHYesJf63N5",
+                "nombre": "18_2.jpg",
+                "principal": true,
+                "orden": 2
+            },
+            {
+                "id": "1WzdvcgjbjmsB8mb77cYACuaE07eCRN9q",
+                "nombre": "18_3.jpg",
+                "principal": false,
+                "orden": 3
+            }
+        ]
+    }
+]
