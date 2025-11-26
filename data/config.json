@@ -1,7 +1,7 @@
 [
     {
         "version": "1.0.0",
-        "mostrar_precios": true,
+        "mostrar_precios": false,
         "idioma": "es"
     }
 ]

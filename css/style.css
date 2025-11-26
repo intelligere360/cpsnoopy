@@ -203,9 +203,10 @@ body {
 }
 
 .product-category {
-    color: #7f8c8d;
+    color: #0f3fdf;
     font-size: 0.9rem;
     margin-bottom: 8px;
+    font-weight: bold;
 }
 
 .product-price {
@@ -1099,9 +1100,10 @@ footer {
 }
 
 .detail-info .product-category {
-    color: #7f8c8d;
+    color: #2616bd;
     font-size: 1rem;
     margin-bottom: 10px;
+    font-weight: bold;
 }
 
 .detail-info .product-price {
@@ -1360,15 +1362,15 @@ input, textarea {
 }
 
 /* Estilos para cuando los precios están ocultos */
-.product-price.no-price {
+.product-price .no-price {
     color: #666;
     font-style: italic;
-    font-size: 0.5em;
+    font-size: 0.8em;
 }
 
 /* Para el modal de detalles */
 .product-detail .no-price {
-    font-size: 0.7em;
+    font-size: 1.0em;
     color: #333;
     font-weight: bold;
 }
