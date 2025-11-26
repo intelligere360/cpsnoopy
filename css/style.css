@@ -210,9 +210,9 @@ body {
 }
 
 .product-price {
-    color: #e74c3c;
+    color: #cf2604;
     font-weight: bold;
-    font-size: 1.3rem;
+    font-size: 1rem;
     margin-bottom: 5px;
 }
 
@@ -354,11 +354,6 @@ body {
     color: #2c3e50;
     margin-bottom: 10px;
     font-size: 1.5rem;
-}
-
-.detail-info .product-price {
-    font-size: 1.8rem;
-    margin: 10px 0;
 }
 
 .product-description {
@@ -1107,9 +1102,9 @@ footer {
 }
 
 .detail-info .product-price {
-    color: #e74c3c;
+    color: #ce2807;
     font-weight: bold;
-    font-size: 1.8rem;
+    font-size: 1rem;
     margin: 10px 0;
 }
 
@@ -1371,7 +1366,7 @@ input, textarea {
 /* Para el modal de detalles */
 .product-detail .no-price {
     font-size: 1.0em;
-    color: #333;
+    color: #666;
     font-weight: bold;
 }
 
