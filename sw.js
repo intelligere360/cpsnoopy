@@ -1,4 +1,4 @@
-// sw.js - Versión corregida para evitar errores con chrome-extension
+// sw.js - VERSIÓN MEJORADA PARA EVITAR ERRORES
 const CACHE_NAME = 'catalogo-cell-phone-snoopy-notificaciones-v1';
 const STATIC_CACHE = 'static-catalogo-v1.1';
 const STATIC_FILES = [
@@ -53,7 +53,26 @@ function isCacheableRequest(request) {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
-// Fetch - Estrategia Cache First para imágenes, Network First para datos
+// ✅ NUEVO: Función para manejar errores de fetch de forma segura
+function handleFetchWithFallback(event, cacheStrategy) {
+  // Verificar que el evento aún es válido
+  if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
+    return;
+  }
+  
+  event.respondWith(
+    cacheStrategy(event).catch(error => {
+      console.warn('❌ Error en fetch, usando fallback:', error);
+      // Fallback seguro para evitar el error de canal cerrado
+      return new Response('', {
+        status: 408,
+        statusText: 'Request Timeout'
+      });
+    })
+  );
+}
+
+// Fetch - Estrategias mejoradas
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
@@ -64,62 +83,57 @@ self.addEventListener('fetch', (event) => {
       url.pathname.endsWith('.png') ||
       url.pathname.endsWith('.jpeg')) {
     
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cachedResponse) => {
-          // Si está en cache, devolverla
-          if (cachedResponse) {
-            console.log('🖼️ Imagen servida desde cache:', url.pathname);
-            return cachedResponse;
-          }
-          
-          // Si no está en cache, buscarla en red y guardarla
-          return fetch(event.request).then((networkResponse) => {
-            if (networkResponse.status === 200 && isCacheableRequest(event.request)) {
-              console.log('📥 Guardando imagen en cache:', url.pathname);
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          }).catch(() => {
-            // Si falla la red, devolver placeholder
-            return caches.match('/images/placeholder.jpg');
-          });
-        });
-      })
-    );
+    handleFetchWithFallback(event, async (event) => {
+      const cache = await caches.open(CACHE_NAME);
+      const cachedResponse = await cache.match(event.request);
+      
+      if (cachedResponse) {
+        console.log('🖼️ Imagen servida desde cache:', url.pathname);
+        return cachedResponse;
+      }
+      
+      try {
+        const networkResponse = await fetch(event.request);
+        if (networkResponse.status === 200 && isCacheableRequest(event.request)) {
+          console.log('📥 Guardando imagen en cache:', url.pathname);
+          cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        console.warn('🌐 Error de red, usando placeholder');
+        const placeholder = await caches.match('/images/placeholder.jpg');
+        return placeholder || new Response('Placeholder image not available', { status: 404 });
+      }
+    });
   }
 
   // Estrategia para JSON (siempre red primero)
   else if (url.pathname.includes('/uc?export=download') || url.pathname.endsWith('.json')) {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          // Guardar en cache para offline solo si es cacheable
-          if (networkResponse.status === 200 && isCacheableRequest(event.request)) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // Si falla la red, buscar en cache
-          return caches.match(event.request);
-        })
-    );
+    handleFetchWithFallback(event, async (event) => {
+      try {
+        const networkResponse = await fetch(event.request);
+        if (networkResponse.status === 200 && isCacheableRequest(event.request)) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      } catch (error) {
+        const cachedResponse = await caches.match(event.request);
+        return cachedResponse || new Response('{}', {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    });
   }
   
   // Para otros archivos (CSS, JS, HTML) - Cache First
   else {
-    event.respondWith(
-      caches.match(event.request)
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return fetch(event.request);
-        })
-    );
+    handleFetchWithFallback(event, async (event) => {
+      const cachedResponse = await caches.match(event.request);
+      return cachedResponse || fetch(event.request);
+    });
   }
 });

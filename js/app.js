@@ -646,29 +646,30 @@ function configurarTrackingContacto() {
 // =============================================
 // CARGA PROGRESIVA DE PRODUCTOS
 // =============================================
+// =============================================
+// CARGA PROGRESIVA DE PRODUCTOS - VERSIÓN OPTIMIZADA
+// =============================================
 async function cargarProductos(forzarActualizacion = false) {
     try {
         console.log('📦 Iniciando carga de productos...');
+        mostrarLoaderRapido(); // ← Mostrar loader
         mostrarEsqueletosCarga();
-
-        // ✅ NUEVO: Cargar configuración si no se ha cargado
+        
+        // Cargar configuración si no se ha cargado
         if (!AppState.config.version) {
             await cargarConfiguracion();
         }
         
         // 1. CARGAR JSON PRIMERO
         const jsonProxyUrl = getProductsJsonUrl();
-        
         const response = await fetch(jsonProxyUrl);
         if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
         
         const productosData = await response.json();
         
-        // 2. PROCESAR PRODUCTOS
+        // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
         productos = productosData.map(producto => {
-            // Procesar las imágenes primero
             const imagenesProcesadas = procesarImagenesDesdeJSON(producto);
-            // Luego obtener la imagen principal basada en las imágenes procesadas
             const imagenPrincipal = obtenerImagenPrincipalDesdeJSON({ ...producto, imagenes: imagenesProcesadas });
             return {
                 ...producto,
@@ -680,23 +681,86 @@ async function cargarProductos(forzarActualizacion = false) {
         guardarCacheLocal(productos);
         console.log(`✅ ${productos.length} productos procesados`);
         
-        // 3. PRECARGAR IMÁGENES PRIMERO (BLOQUEANTE)
-        console.log('🔄 Precargando imágenes antes de mostrar...');
-        await precargarImagenesEnCache(productos);
-        
-        // 4. MOSTRAR PRODUCTOS DESDE CACHE
-        console.log('🎉 Mostrando productos desde cache...');
+        // ✅ MOSTRAR PRODUCTOS INMEDIATAMENTE
         await mostrarProductosDesdeCache(productos);
-        
         cargarCategorias();
         actualizarBadgesConsultas();
-
-        // ✅ NUEVO: Aplicar configuración de precios después de cargar productos
         aplicarConfiguracionPrecios();
+
+        // ✅ OCULTAR LOADER INMEDIATAMENTE
+        ocultarLoaderRapido();
+        
+        // ✅ PRECARGAR SOLO SI FALTAN IMÁGENES (no bloqueante)
+        precargarImagenesFaltantes(productos);
         
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
+        ocultarLoaderRapido(); // ← Asegurar ocultar en error
         await cargarDesdeCache();
+    }
+}
+
+/**
+ * Precarga solo las imágenes que no están en cache
+ */
+async function precargarImagenesFaltantes(productos) {
+    console.log('🔍 Verificando imágenes faltantes en cache...');
+    
+    const imagenesParaCachear = [];
+    
+    // Recolectar URLs únicas
+    productos.forEach(producto => {
+        if (producto.imagenes && producto.imagenes.length > 0) {
+            producto.imagenes.forEach(imagen => {
+                if (imagen.url && !imagen.url.includes('placeholder')) {
+                    imagenesParaCachear.push(imagen.url);
+                }
+            });
+        }
+    });
+    
+    const urlsUnicas = [...new Set(imagenesParaCachear)];
+    let imagenesFaltantes = 0;
+    
+    // Verificar rápidamente qué imágenes faltan
+    for (const url of urlsUnicas) {
+        try {
+            const existe = await ImageCacheDB.imageExists(url);
+            if (!existe) {
+                imagenesFaltantes++;
+                // Descargar en segundo plano
+                descargarImagenEnSegundoPlano(url);
+            }
+        } catch (error) {
+            console.warn('Error verificando:', url);
+        }
+    }
+    
+    if (imagenesFaltantes > 0) {
+        console.log(`📥 Descargando ${imagenesFaltantes} imágenes faltantes en segundo plano...`);
+    } else {
+        console.log('✅ Todas las imágenes ya están en cache');
+    }
+}
+
+/**
+ * Descarga una imagen individual en segundo plano
+ */
+async function descargarImagenEnSegundoPlano(urlImagen) {
+    try {
+        const response = await fetch(urlImagen, {
+            mode: 'cors',
+            credentials: 'omit',
+            priority: 'low' // Navegador puede dar menor prioridad
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            await ImageCacheDB.saveImage(urlImagen, blob);
+            console.log('💾 Imagen descargada en segundo plano:', urlImagen);
+        }
+    } catch (error) {
+        console.warn('❌ Error descargando imagen en segundo plano:', urlImagen);
     }
 }
 
@@ -1805,4 +1869,15 @@ function actualizarVisibilidadPrecios() {
             element.textContent = 'Consultar precio';
         }
     });
+}
+
+/* FUNCIONES PARA EL QUICK LOADER */
+function mostrarLoaderRapido() {
+    const loader = document.getElementById('quickLoader');
+    if (loader) loader.style.display = 'flex';
+}
+
+function ocultarLoaderRapido() {
+    const loader = document.getElementById('quickLoader');
+    if (loader) loader.style.display = 'none';
 }

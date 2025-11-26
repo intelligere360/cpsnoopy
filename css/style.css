@@ -1363,11 +1363,34 @@ input, textarea {
 .product-price.no-price {
     color: #666;
     font-style: italic;
+    font-size: 0.5em;
 }
 
 /* Para el modal de detalles */
 .product-detail .no-price {
-    font-size: 1.2em;
+    font-size: 0.7em;
+    color: #333;
+    font-weight: bold;
+}
+
+/* ESTILOS PARA EL QUICK LOADER */
+/* En style.css */
+.quick-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.loader-text {
+    font-size: 18px;
     color: #333;
     font-weight: bold;
 }
