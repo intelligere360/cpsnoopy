@@ -5,6 +5,9 @@ const GOOGLE_DRIVE_CONFIG = {
     // https://drive.google.com/file/d/16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6/view?usp=sharing
     productsJsonUrl: 'https://drive.google.com/uc?export=download&id=16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6',
     
+    // 🔗 NUEVO: URL del JSON de configuración
+    configJsonUrl: 'https://drive.google.com/uc?export=download&id=1lE5srirGH7SQeAz6SqGj2GINB4r37peG',
+
     // 🖼️ Nueva Base URL que SI funciona para embedding
     baseImageUrl: 'https://drive.google.com/uc?export=view&id=', //'https://lh3.googleusercontent.com/d/',
     
@@ -41,6 +44,15 @@ function buildImageUrl(fileId) {
  */
 function getProductsJsonUrl() {
     const jsonUrl = GOOGLE_DRIVE_CONFIG.productsJsonUrl;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(jsonUrl)}`;
+    return proxyUrl;
+}
+
+/**
+ * NUEVO: Obtiene la URL del JSON de configuración
+ */
+function getConfigJsonUrl() {
+    const jsonUrl = GOOGLE_DRIVE_CONFIG.configJsonUrl;
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(jsonUrl)}`;
     return proxyUrl;
 }

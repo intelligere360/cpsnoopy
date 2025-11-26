@@ -84,8 +84,102 @@ const AppState = {
     productoActual: null,
     sessionId: generarSessionId(),
     mensajesPendientes: [],
-    imagenesPrecargadas: new Set()
+    imagenesPrecargadas: new Set(),
+    // ✅ NUEVO: Configuración de la aplicación
+    config: {
+        mostrar_precios: true, // Valor por defecto
+        version: "1.0.0",
+        idioma: "es"
+    }
 };
+
+// =============================================
+// SISTEMA DE CONFIGURACIÓN
+// =============================================
+
+/**
+ * Carga la configuración desde config.json
+ */
+async function cargarConfiguracion() {
+    try {
+        console.log('⚙️ Cargando configuración...');
+        
+        // Intentar cargar desde Google Drive
+        const configUrl = getConfigJsonUrl();
+        const response = await fetch(configUrl);
+        
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        
+        const configData = await response.json();
+        
+        // Actualizar configuración
+        if (configData && configData.length > 0) {
+            AppState.config = { ...AppState.config, ...configData[0] };
+            console.log('✅ Configuración cargada:', AppState.config);
+        }
+        
+        // Guardar en cache local
+        guardarConfigCache(AppState.config);
+        
+    } catch (error) {
+        console.warn('❌ Error cargando configuración, usando cache o valores por defecto:', error);
+        await cargarConfigDesdeCache();
+    }
+}
+
+/**
+ * Guarda la configuración en cache local
+ */
+function guardarConfigCache(config) {
+    try {
+        const cacheData = {
+            config: config,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('config_cache', JSON.stringify(cacheData));
+    } catch (error) {
+        console.warn('No se pudo guardar configuración en cache:', error);
+    }
+}
+
+/**
+ * Carga la configuración desde cache local
+ */
+async function cargarConfigDesdeCache() {
+    try {
+        const cache = localStorage.getItem('config_cache');
+        if (cache) {
+            const data = JSON.parse(cache);
+            // Cache válido por 1 hora
+            if (Date.now() - data.timestamp < 60 * 60 * 1000) {
+                AppState.config = { ...AppState.config, ...data.config };
+                console.log('📂 Configuración cargada desde cache:', AppState.config);
+                return true;
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando configuración desde cache:', error);
+    }
+    return false;
+}
+
+/**
+ * Verifica si se deben mostrar precios
+ */
+function debeMostrarPrecios() {
+    return AppState.config.mostrar_precios === true;
+}
+
+/**
+ * Aplica la configuración de precios a la UI
+ */
+function aplicarConfiguracionPrecios() {
+    const mostrarPrecios = debeMostrarPrecios();
+    console.log('💰 Configuración de precios:', mostrarPrecios ? 'MOSTRAR' : 'OCULTAR');
+    
+    // Aplicar a elementos existentes
+    actualizarVisibilidadPrecios();
+}
 
 // =============================================
 // DETECCIÓN Y CONFIGURACIÓN PARA MODO APP/APK
@@ -556,6 +650,11 @@ async function cargarProductos(forzarActualizacion = false) {
     try {
         console.log('📦 Iniciando carga de productos...');
         mostrarEsqueletosCarga();
+
+        // ✅ NUEVO: Cargar configuración si no se ha cargado
+        if (!AppState.config.version) {
+            await cargarConfiguracion();
+        }
         
         // 1. CARGAR JSON PRIMERO
         const jsonProxyUrl = getProductsJsonUrl();
@@ -591,6 +690,9 @@ async function cargarProductos(forzarActualizacion = false) {
         
         cargarCategorias();
         actualizarBadgesConsultas();
+
+        // ✅ NUEVO: Aplicar configuración de precios después de cargar productos
+        aplicarConfiguracionPrecios();
         
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
@@ -607,6 +709,9 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
     }
     
     console.log('🖼️ Renderizando desde cache...');
+
+    // ✅ NUEVO: Obtener configuración de precios
+    const mostrarPrecios = debeMostrarPrecios();
     
     // Crear HTML con imágenes desde cache
     const productosHTML = await Promise.all(
@@ -626,6 +731,11 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
                 }
             }
             
+            // ✅ NUEVO: Mostrar u ocultar precio según configuración
+            const precioHTML = mostrarPrecios 
+                ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
+                : `<div class="product-price no-price">Precio no disponible</div>`;
+
             return `
             <div class="product-card" 
                  onclick="mostrarDetallesProducto(${producto.id})"
@@ -642,7 +752,7 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
                 <div class="product-info">
                     <div class="product-name">${producto.nombre}</div>
                     <div class="product-category">${producto.categoria}</div>
-                    <div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>
+                    ${precioHTML}
                 </div>
             </div>
             `;
@@ -778,6 +888,12 @@ async function mostrarDetallesProducto(productoId) {
     AppState.productoActual = producto;
     
     const modalContent = document.getElementById('modalContent');
+
+    // ✅ NUEVO: Mostrar u ocultar precio según configuración
+    const mostrarPrecios = debeMostrarPrecios();
+    const precioHTML = mostrarPrecios 
+        ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
+        : `<div class="product-price no-price">Consultar precio</div>`;
     
     // ✅ NUEVO: Mostrar esqueleto de carga mientras se obtienen las imágenes
     modalContent.innerHTML = `
@@ -790,9 +906,7 @@ async function mostrarDetallesProducto(productoId) {
             <div class="detail-info">
                 <h2>${producto.nombre}</h2>
                 <p class="product-category">${producto.categoria}</p>
-                <div class="product-price">
-                    ${formatearPrecio(producto.precioMin, producto.precioMax)}
-                </div>
+                ${precioHTML}
                 <div class="product-description">${producto.descripcion}</div>
                 ${formatearEspecificaciones(producto.especificaciones)}
             </div>
@@ -1472,29 +1586,35 @@ function formatearEspecificaciones(especificaciones) {
 // =============================================
 // INICIALIZACIÓN MEJORADA
 // =============================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // 1. Registrar Service Worker PRIMERO
     // Esto ya se hace desde index.html en una porción script
     
     // 2. Configurar modo App/APK
     configurarModoApp();
     
-    // 3. Inicializar EmailJS
+    // ✅ NUEVO: 3. Cargar configuración primero
+    await cargarConfiguracion();
+    
+    // 4. Inicializar EmailJS
     if (typeof emailjs !== 'undefined') {
         emailjs.init(configContacto.proveedor.userId);
     }
     
-    // 4. Cargar productos (ahora con carga progresiva)
+    // 5. Cargar productos (ahora con carga progresiva)
     cargarProductos();
     
-    // 5. Configurar eventos básicos
+    // 6. Configurar eventos básicos
     configurarEventListeners();
     
-    // 6. Configurar sistema de notificaciones
+    // 7. Configurar sistema de notificaciones
     configurarTrackingContacto();
     
-    // 7. Configurar detección de conexión
+    // 8. Configurar detección de conexión
     configurarDeteccionConexion();
+    
+    // ✅ NUEVO: 9. Aplicar configuración de precios
+    aplicarConfiguracionPrecios();
     
     console.log('🚀 Catálogo iniciado con soporte para APK');
 });
@@ -1666,4 +1786,23 @@ async function verificarEstadoCache() {
   } catch (error) {
     console.warn('❌ Error verificando cache:', error);
   }
+}
+
+/* SOBRE LOS PRECIOS A MOSTRAR U OCULTAR */
+/**
+ * Actualiza la visibilidad de precios en elementos existentes
+ */
+function actualizarVisibilidadPrecios() {
+    const mostrarPrecios = debeMostrarPrecios();
+    const precioElements = document.querySelectorAll('.product-price');
+    
+    precioElements.forEach(element => {
+        if (mostrarPrecios) {
+            element.classList.remove('no-price');
+            // Aquí podrías restaurar el precio original si lo guardaste en un data attribute
+        } else {
+            element.classList.add('no-price');
+            element.textContent = 'Consultar precio';
+        }
+    });
 }
