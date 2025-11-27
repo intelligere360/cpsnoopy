@@ -1391,3 +1391,98 @@ input, textarea {
     color: #333;
     font-weight: bold;
 }
+
+/* Badge NUEVO para productos */
+.product-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    z-index: 10;
+    animation: pulse-nuevo 2s infinite;
+    transform: rotate(0deg);
+    transition: all 0.3s ease;
+}
+
+/* Badge inclinado 45 grados */
+.product-badge.inclinado {
+    transform: rotate(45deg);
+    top: 15px;
+    right: -15px;
+    padding: 5px 20px;
+}
+
+/* Badge para el modal */
+.modal-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+    z-index: 100;
+    animation: pulse-nuevo 2s infinite;
+    transform: rotate(45deg);
+}
+
+/* Animación de pulso para el badge */
+@keyframes pulse-nuevo {
+    0% {
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        transform: rotate(45deg) scale(1);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(255, 107, 107, 0.7);
+        transform: rotate(45deg) scale(1.05);
+    }
+    100% {
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        transform: rotate(45deg) scale(1);
+    }
+}
+
+/* Asegurar que el contenedor de imagen tenga posición relativa */
+.product-image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-images {
+    position: relative;
+}
+
+/* Efecto hover para el badge */
+.product-badge:hover {
+    transform: rotate(45deg) scale(1.1);
+}
+
+/* Versión móvil */
+@media (max-width: 768px) {
+    .product-badge.inclinado {
+        transform: rotate(45deg) scale(0.9);
+        top: 10px;
+        right: -12px;
+        padding: 4px 16px;
+        font-size: 10px;
+    }
+    
+    .modal-badge {
+        transform: rotate(45deg) scale(0.9);
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}

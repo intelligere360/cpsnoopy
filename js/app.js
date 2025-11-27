@@ -552,7 +552,7 @@ async function enviarNotificacionEmail(data) {
     const templateParams = {
         vendedor: configContacto.vendedor,
         product_name: data.producto.nombre,
-        product_price: `${formatearPrecio(producto.precioMin, producto.precioMax)}`,
+        product_price: `${formatearPrecio(data.producto.precioMin, data.producto.precioMax)}`,
         product_category: data.producto.categoria,
         product_id: data.producto.id,
         contact_type: data.tipo,
@@ -799,6 +799,11 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
             const precioHTML = mostrarPrecios 
                 ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
                 : `<div class="product-price no-price">Precio no disponible</div>`;
+            
+            // ✅ NUEVO: Badge "NUEVO" si el producto es nuevo
+            const badgeNuevo = producto.nuevo 
+                ? `<div class="product-badge inclinado">¡Nuevo!</div>`
+                : '';
 
             return `
             <div class="product-card" 
@@ -812,6 +817,7 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
                          onload="this.style.opacity='1'"
                          onerror="this.src='./images/placeholder.jpg'; this.style.opacity='1'"
                          style="opacity: ${AppState.imagenesPrecargadas.has(producto.imagenPrincipal) ? '1' : '0.7'}; transition: opacity 0.3s ease">
+                    ${badgeNuevo}
                 </div>
                 <div class="product-info">
                     <div class="product-name">${producto.nombre}</div>
@@ -959,6 +965,9 @@ async function mostrarDetallesProducto(productoId) {
         ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
         : `<div class="product-price no-price">Consultar precio</div>`;
     
+    // ✅ NUEVO: Badge "NUEVO" para el modal
+    const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Nuevo!</div>` : '';
+
     // ✅ NUEVO: Mostrar esqueleto de carga mientras se obtienen las imágenes
     modalContent.innerHTML = `
         <div class="product-detail">
@@ -966,6 +975,7 @@ async function mostrarDetallesProducto(productoId) {
                 <div class="carousel-skeleton">
                     <div class="skeleton-image-large"></div>
                 </div>
+                ${badgeNuevoModal}
             </div>
             <div class="detail-info">
                 <h2>${producto.nombre}</h2>
@@ -1056,6 +1066,9 @@ async function crearCarruselConCache(producto) {
             <button class="carousel-btn carousel-prev">‹</button>
             <button class="carousel-btn carousel-next">›</button>
         ` : '';
+
+        // ✅ NUEVO: Badge "NUEVO" para el carrusel
+        const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Nuevo!</div>` : '';
         
         // ✅ NUEVO: Reemplazar el esqueleto con el carrusel real
         detailImages.innerHTML = `
@@ -1070,6 +1083,7 @@ async function crearCarruselConCache(producto) {
                     </div>
                 ` : ''}
             </div>
+            ${badgeNuevoModal}
         `;
         
         // ✅ NUEVO: Inicializar el carrusel inmediatamente
