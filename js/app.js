@@ -802,8 +802,7 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
             
             // ✅ NUEVO: Badge "NUEVO" si el producto es nuevo
             const badgeNuevo = producto.nuevo 
-                ? `<div class="product-badge inclinado">¡Nuevo!</div>`
-                : '';
+                ? `<div class="product-badge" data-product-id="${producto.id}">¡Nuevo!</div>` : '';
 
             return `
             <div class="product-card" 

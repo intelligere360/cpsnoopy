@@ -156,9 +156,9 @@ body {
 }
 
 .product-image-container {
-    position: relative;
+    position: relative !important;
     height: 200px;
-    overflow: hidden;
+    overflow: hidden !important;
     background: #f8f9fa;
 }
 
@@ -1357,14 +1357,14 @@ input, textarea {
 }
 
 /* Estilos para cuando los precios están ocultos */
-.product-price .no-price {
+.product-price.no-price {
     color: #666;
     font-style: italic;
     font-size: 0.8em;
 }
 
 /* Para el modal de detalles */
-.product-detail .no-price {
+.product-detail.no-price {
     font-size: 1.0em;
     color: #666;
     font-weight: bold;
@@ -1392,73 +1392,71 @@ input, textarea {
     font-weight: bold;
 }
 
+/* ================================================= */
+/* ESTILOS ESPECÍFICOS PARA EL CARTEL BADGE NUEVO    */
+/* ================================================= */
+
 /* Badge NUEVO para productos */
 .product-badge {
+    /* Posición */
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    top: 5px;
+    right: 5px;
+    
+    /* Estilo visual */
+    background: #ff4757;
     color: white;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-    z-index: 10;
-    animation: pulse-nuevo 2s infinite;
-    transform: rotate(0deg);
-    transition: all 0.3s ease;
-}
-
-/* Badge inclinado 45 grados */
-.product-badge.inclinado {
+    
+    /* Efectos */
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.6);
     transform: rotate(45deg);
-    top: 15px;
-    right: -15px;
-    padding: 5px 20px;
+    z-index: 9999;
+    
+    /* Mejor legibilidad */
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Badge para el modal */
 .modal-badge {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 10px;
+    right: 10px;
     background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
     color: white;
-    padding: 8px 16px;
-    border-radius: 25px;
-    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.5);
     z-index: 100;
     animation: pulse-nuevo 2s infinite;
     transform: rotate(45deg);
+    line-height: 1.2;
 }
 
 /* Animación de pulso para el badge */
 @keyframes pulse-nuevo {
     0% {
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        box-shadow: 0 3px 8px rgba(255, 107, 107, 0.4);
         transform: rotate(45deg) scale(1);
     }
     50% {
-        box-shadow: 0 4px 20px rgba(255, 107, 107, 0.7);
+        box-shadow: 0 3px 15px rgba(255, 107, 107, 0.7);
         transform: rotate(45deg) scale(1.05);
     }
     100% {
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        box-shadow: 0 3px 8px rgba(255, 107, 107, 0.4);
         transform: rotate(45deg) scale(1);
     }
-}
-
-/* Asegurar que el contenedor de imagen tenga posición relativa */
-.product-image-container {
-    position: relative;
-    overflow: hidden;
 }
 
 .detail-images {
@@ -1470,19 +1468,111 @@ input, textarea {
     transform: rotate(45deg) scale(1.1);
 }
 
-/* Versión móvil */
-@media (max-width: 768px) {
-    .product-badge.inclinado {
-        transform: rotate(45deg) scale(0.9);
+/* ========== VERSIÓN ESCRITORIO ========== */
+@media (min-width: 769px) {
+    .product-badge {
         top: 10px;
-        right: -12px;
-        padding: 4px 16px;
-        font-size: 10px;
+        right: 10px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
     }
     
     .modal-badge {
+        top: 15px;
+        right: 15px;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 14px;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+    }
+}
+
+/* ========== VERSIÓN MÓVIL MEJORADA ========== */
+@media (max-width: 768px) {
+    .product-badge {
+        top: 5px;
+        right: 5px;
+        padding: 3px 8px;
+        font-size: 9px;
+        border-radius: 12px;
         transform: rotate(45deg) scale(0.9);
-        padding: 6px 12px;
-        font-size: 12px;
+        animation: pulse-nuevo-mobile 2s infinite;
+    }
+    
+    .modal-badge {
+        top: 8px;
+        right: 8px;
+        padding: 4px 10px;
+        font-size: 10px;
+        border-radius: 15px;
+        transform: rotate(45deg) scale(0.9);
+        animation: pulse-nuevo-mobile 2s infinite;
+    }
+    
+    /* Animación más sutil para móvil */
+    @keyframes pulse-nuevo-mobile {
+        0% {
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+            transform: rotate(45deg) scale(0.9);
+        }
+        50% {
+            box-shadow: 0 2px 10px rgba(255, 107, 107, 0.6);
+            transform: rotate(45deg) scale(0.95);
+        }
+        100% {
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+            transform: rotate(45deg) scale(0.9);
+        }
+    }
+}
+
+/* ========== MÓVILES MUY PEQUEÑOS ========== */
+@media (max-width: 480px) {
+    .product-badge {
+        top: 3px;
+        right: 3px;
+        padding: 2px 6px;
+        font-size: 8px;
+        border-radius: 10px;
+    }
+    
+    .modal-badge {
+        top: 5px;
+        right: 5px;
+        padding: 3px 8px;
+        font-size: 9px;
+        border-radius: 12px;
+    }
+}
+
+/* ========== ORIENTACIÓN HORIZONTAL ========== */
+@media (max-width: 768px) and (orientation: landscape) {
+    .product-badge {
+        top: 3px;
+        right: 3px;
+        padding: 2px 6px;
+        font-size: 8px;
+    }
+    
+    .modal-badge {
+        top: 5px;
+        right: 5px;
+        padding: 3px 8px;
+        font-size: 9px;
+    }
+}
+
+/* Para móviles muy pequeños */
+@media (max-width: 360px) {
+    .product-badge {
+        top: 2px;
+        right: 2px;
+        padding: 2px 6px;
+        font-size: 8px;
+        border-radius: 8px;
     }
 }
