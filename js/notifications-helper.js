@@ -15,7 +15,8 @@ async function registerProductConsult(producto, tipoContacto) {
         producto: {
             id: producto.id,
             nombre: producto.nombre,
-            precio: producto.precio,
+            precioMin: producto.precioMin,
+            precioMax: producto.precioMax,
             categoria: producto.categoria
         }
     };

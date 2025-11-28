@@ -446,21 +446,7 @@ async function limpiarCacheAntigua() {
 // SISTEMA DE NOTIFICACIONES AL PROVEEDOR
 // =============================================
 
-async function enviarNotificacionProveedor(producto, tipoContacto) {
-    const usuario = obtenerDatosUsuario();
-    
-    const notificationData = {
-        timestamp: new Date().toISOString(),
-        tipo: tipoContacto,
-        usuario: usuario,
-        producto: {
-            id: producto.id,
-            nombre: producto.nombre,
-            categoria: producto.categoria,
-            precioMin: producto.precioMin,
-            precioMax: producto.precioMax
-        }
-    };
+async function enviarNotificacionProveedor(notificationData) {
 
     async function registrarConsultaEnExcel(notificationData) {   
         // Incrementar contador local
