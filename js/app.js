@@ -453,7 +453,7 @@ async function enviarNotificacionProveedor(notificationData) {
         incrementarContadorConsulta(notificationData.producto.id);
         
         // Enviar a servidor/Google Apps Script para Excel
-        await enviarConsultaAExcel(consultaData);
+        await enviarConsultaAExcel(notificationData);
     }
 
     function incrementarContadorConsulta(productoId) {
