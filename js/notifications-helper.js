@@ -75,7 +75,7 @@ function actualizarBadgesConsultas() {
         if (consultasLocales > 0) {
             const badge = document.createElement('div');
             badge.className = 'consultas-local-badge';
-            badge.textContent = `+${consultasLocales} nuevas`;
+            badge.textContent = `+${consultasLocales} consultas nuevas`;
             badge.style.cssText = `
                 position: absolute;
                 top: 10px;

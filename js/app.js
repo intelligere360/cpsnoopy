@@ -1936,51 +1936,97 @@ async function enviarConsultaAExcel(consultaData) {
  * Envía datos a Google Apps Script para escribir en Excel
  */
 async function enviarViaGoogleAppsScript(excelData) {
-    try {
-        console.log('📤 Enviando datos a Google Script:', excelData);
-        
-        // URL de tu Google Apps Script
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
-        
-        // ✅ SOLUCIÓN: Usar JSONP mediante un elemento script
-        return new Promise((resolve, reject) => {
-            // Crear callback único
+    return new Promise((resolve, reject) => {
+        try {
+            console.log('🚀 INICIANDO JSONP CON DATOS:', excelData);
+            
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
             const callbackName = 'jsonp_callback_' + Date.now();
+            
+            console.log('📞 Callback name:', callbackName);
+            
+            // Configurar callback
             window[callbackName] = function(response) {
+                console.log('🔄 CALLBACK EJECUTADO:', response);
+                
+                // Limpiar
                 delete window[callbackName];
-                document.body.removeChild(script);
+                if (window.currentJSONPScript) {
+                    document.body.removeChild(window.currentJSONPScript);
+                    delete window.currentJSONPScript;
+                }
+                if (window.jsonpTimeout) {
+                    clearTimeout(window.jsonpTimeout);
+                    delete window.jsonpTimeout;
+                }
                 
                 if (response && response.success) {
-                    console.log('✅ Datos enviados a Google Sheets');
+                    console.log('✅ JSONP EXITOSO');
                     resolve(true);
                 } else {
-                    console.warn('❌ Error en respuesta JSONP');
-                    reject(new Error('Error en Google Apps Script'));
+                    console.error('❌ JSONP FALLÓ:', response);
+                    reject(new Error(response?.error || 'Error desconocido'));
                 }
             };
             
-            // Convertir datos a parámetros URL
-            const params = new URLSearchParams();
-            params.append('data', JSON.stringify(excelData));
-            params.append('callback', callbackName);
-            
-            // Crear elemento script
-            const script = document.createElement('script');
-            script.src = `${SCRIPT_URL}?${params.toString()}`;
-            script.onerror = () => {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                console.warn('❌ Error cargando script JSONP');
-                reject(new Error('Error de conexión'));
+            // Preparar datos
+            const payload = {
+                product_id: excelData.product_id || '',
+                product_name: excelData.product_name || '',
+                product_category: excelData.product_category || '',
+                precioMin: excelData.precioMin || 0,
+                precioMax: excelData.precioMax || 0,
+                fecha: excelData.fecha || '',
+                hora: excelData.hora || '',
+                contact_type: excelData.contact_type || '',
+                user_platform: excelData.user_platform || '',
+                user_agent: excelData.user_agent || '',
+                status: excelData.status || ''
             };
             
+            const encodedData = encodeURIComponent(JSON.stringify(payload));
+            const finalUrl = `${SCRIPT_URL}?callback=${callbackName}&data=${encodedData}`;
+            
+            console.log('🔗 URL COMPLETA:', finalUrl);
+            
+            // Timeout
+            window.jsonpTimeout = setTimeout(() => {
+                console.error('⏰ TIMEOUT: No se recibió respuesta JSONP');
+                if (window[callbackName]) delete window[callbackName];
+                if (window.currentJSONPScript) {
+                    document.body.removeChild(window.currentJSONPScript);
+                    delete window.currentJSONPScript;
+                }
+                reject(new Error('Timeout en JSONP'));
+            }, 15000);
+            
+            // Crear script
+            const script = document.createElement('script');
+            script.src = finalUrl;
+            
+            script.onerror = (error) => {
+                console.error('❌ ERROR DE RED EN SCRIPT:', error);
+                if (window.jsonpTimeout) {
+                    clearTimeout(window.jsonpTimeout);
+                    delete window.jsonpTimeout;
+                }
+                if (window[callbackName]) delete window[callbackName];
+                reject(new Error('Error de red cargando script'));
+            };
+            
+            script.onload = () => {
+                console.log('📨 SCRIPT CARGADO (esperando callback...)');
+            };
+            
+            window.currentJSONPScript = script;
             document.body.appendChild(script);
-        });
-        
-    } catch (error) {
-        console.warn('❌ Error con Google Apps Script:', error);
-        throw error;
-    }
+            console.log('✅ SCRIPT AGREGADO AL DOM');
+            
+        } catch (error) {
+            console.error('💥 ERROR SETUP JSONP:', error);
+            reject(error);
+        }
+    });
 }
 
 /**
@@ -2081,5 +2127,3 @@ async function procesarConsultasLocales() {
     
     localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
 }
-
-
