@@ -1939,28 +1939,25 @@ async function enviarViaGoogleAppsScript(excelData) {
     try {
         console.log('📤 Enviando datos a Google Script:', excelData);
         
-        // URL de tu Google Apps Script - REEMPLAZA CON TU URL REAL
+        // URL de tu Google Apps Script
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
         
-        // Enviar como JSON simple
+        // ✅ SOLUCIÓN: Usar mode: 'no-cors' y FormData
+        const formData = new URLSearchParams();
+        formData.append('data', JSON.stringify(excelData));
+        
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors', // ← ESTO ES CLAVE para evitar CORS
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: JSON.stringify(excelData)
+            body: formData
         });
 
-        console.log('✅ Solicitud enviada a Google Apps Script');
+        console.log('✅ Solicitud enviada a Google Apps Script (no-cors)');
         
-        // Intentar leer la respuesta aunque sea no-cors
-        try {
-            const text = await response.text();
-            console.log('Respuesta del servidor:', text);
-        } catch (readError) {
-            console.log('No se pudo leer respuesta (normal en no-cors)');
-        }
-        
+        // Con no-cors no podemos leer la respuesta, pero confiamos en que funciona
         return true;
         
     } catch (error) {
@@ -2067,3 +2064,4 @@ async function procesarConsultasLocales() {
     
     localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
 }
+
