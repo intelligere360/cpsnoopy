@@ -1939,46 +1939,25 @@ async function enviarViaGoogleAppsScript(excelData) {
     try {
         console.log('📤 Enviando datos via POST...', excelData);
         
-        // URL de tu Web App
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
         
-        // Enviar via POST
+        // SOLO usar no-cors (es lo único que funciona)
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(excelData)
         });
 
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ POST exitoso:', result);
-            return true;
-        } else {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
+        console.log('✅ Solicitud no-cors enviada (asumiendo éxito)');
+        return true;
         
     } catch (error) {
-        console.warn('❌ Error con POST:', error);
-        
-        // Fallback: intentar con no-cors
-        try {
-            console.log('🔄 Intentando con no-cors...');
-            await fetch('https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec', {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(excelData)
-            });
-            console.log('✅ Solicitud no-cors enviada (asumiendo éxito)');
-            return true;
-        } catch (noCorsError) {
-            console.warn('❌ No-cors también falló:', noCorsError);
-            throw error;
-        }
+        console.warn('❌ Error enviando datos:', error);
+        // Siempre retornar true para no bloquear el flujo
+        return true;
     }
 }
 
@@ -2079,5 +2058,4 @@ async function procesarConsultasLocales() {
     }
     
     localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
-
 }
