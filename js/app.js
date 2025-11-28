@@ -1936,97 +1936,50 @@ async function enviarConsultaAExcel(consultaData) {
  * Envía datos a Google Apps Script para escribir en Excel
  */
 async function enviarViaGoogleAppsScript(excelData) {
-    return new Promise((resolve, reject) => {
-        try {
-            console.log('🚀 INICIANDO JSONP CON DATOS:', excelData);
-            
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
-            const callbackName = 'jsonp_callback_' + Date.now();
-            
-            console.log('📞 Callback name:', callbackName);
-            
-            // Configurar callback
-            window[callbackName] = function(response) {
-                console.log('🔄 CALLBACK EJECUTADO:', response);
-                
-                // Limpiar
-                delete window[callbackName];
-                if (window.currentJSONPScript) {
-                    document.body.removeChild(window.currentJSONPScript);
-                    delete window.currentJSONPScript;
-                }
-                if (window.jsonpTimeout) {
-                    clearTimeout(window.jsonpTimeout);
-                    delete window.jsonpTimeout;
-                }
-                
-                if (response && response.success) {
-                    console.log('✅ JSONP EXITOSO');
-                    resolve(true);
-                } else {
-                    console.error('❌ JSONP FALLÓ:', response);
-                    reject(new Error(response?.error || 'Error desconocido'));
-                }
-            };
-            
-            // Preparar datos
-            const payload = {
-                product_id: excelData.product_id || '',
-                product_name: excelData.product_name || '',
-                product_category: excelData.product_category || '',
-                precioMin: excelData.precioMin || 0,
-                precioMax: excelData.precioMax || 0,
-                fecha: excelData.fecha || '',
-                hora: excelData.hora || '',
-                contact_type: excelData.contact_type || '',
-                user_platform: excelData.user_platform || '',
-                user_agent: excelData.user_agent || '',
-                status: excelData.status || ''
-            };
-            
-            const encodedData = encodeURIComponent(JSON.stringify(payload));
-            const finalUrl = `${SCRIPT_URL}?callback=${callbackName}&data=${encodedData}`;
-            
-            console.log('🔗 URL COMPLETA:', finalUrl);
-            
-            // Timeout
-            window.jsonpTimeout = setTimeout(() => {
-                console.error('⏰ TIMEOUT: No se recibió respuesta JSONP');
-                if (window[callbackName]) delete window[callbackName];
-                if (window.currentJSONPScript) {
-                    document.body.removeChild(window.currentJSONPScript);
-                    delete window.currentJSONPScript;
-                }
-                reject(new Error('Timeout en JSONP'));
-            }, 15000);
-            
-            // Crear script
-            const script = document.createElement('script');
-            script.src = finalUrl;
-            
-            script.onerror = (error) => {
-                console.error('❌ ERROR DE RED EN SCRIPT:', error);
-                if (window.jsonpTimeout) {
-                    clearTimeout(window.jsonpTimeout);
-                    delete window.jsonpTimeout;
-                }
-                if (window[callbackName]) delete window[callbackName];
-                reject(new Error('Error de red cargando script'));
-            };
-            
-            script.onload = () => {
-                console.log('📨 SCRIPT CARGADO (esperando callback...)');
-            };
-            
-            window.currentJSONPScript = script;
-            document.body.appendChild(script);
-            console.log('✅ SCRIPT AGREGADO AL DOM');
-            
-        } catch (error) {
-            console.error('💥 ERROR SETUP JSONP:', error);
-            reject(error);
+    try {
+        console.log('📤 Enviando datos via POST...', excelData);
+        
+        // URL de tu Web App
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
+        
+        // Enviar via POST
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(excelData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ POST exitoso:', result);
+            return true;
+        } else {
+            throw new Error(`HTTP error: ${response.status}`);
         }
-    });
+        
+    } catch (error) {
+        console.warn('❌ Error con POST:', error);
+        
+        // Fallback: intentar con no-cors
+        try {
+            console.log('🔄 Intentando con no-cors...');
+            await fetch('https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec', {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(excelData)
+            });
+            console.log('✅ Solicitud no-cors enviada (asumiendo éxito)');
+            return true;
+        } catch (noCorsError) {
+            console.warn('❌ No-cors también falló:', noCorsError);
+            throw error;
+        }
+    }
 }
 
 /**
@@ -2126,4 +2079,5 @@ async function procesarConsultasLocales() {
     }
     
     localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
+
 }
