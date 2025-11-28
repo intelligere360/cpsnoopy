@@ -1895,10 +1895,10 @@ async function enviarConsultaAExcel(consultaData) {
         console.log('📊 Enviando consulta a Excel...');
         
         // ID del archivo Excel en Google Drive (debes reemplazar con tu ID real)
-        const EXCEL_FILE_ID = '1V_um2ji8xkr0nX-dn8hNN91MWyzH1n_K'; // ← REEMPLAZAR CON ID REAL
+        // const EXCEL_FILE_ID = '1ZhD6a1t_1tVJz7fQv9DnMmqUTnSEjXwsyjcvh57OMSk'; // ← REEMPLAZAR CON ID REAL
         
         // URL de Google Apps Script para procesar los datos
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec'; // ← REEMPLAZAR CON URL REAL
+        // const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec'; // ← REEMPLAZAR CON URL REAL
         
         // Preparar datos para el Excel (mapear a las columnas del Excel)
         const excelData = {
@@ -1912,13 +1912,13 @@ async function enviarConsultaAExcel(consultaData) {
             contact_type: consultaData.tipo,
             user_platform: consultaData.usuario.plataforma,
             user_agent: consultaData.usuario.userAgent,
-            status: 'registrado',
+            status: 'consulta',
             session_id: consultaData.usuario.sessionId,
             timestamp: consultaData.timestamp
         };
 
         // Opción 1: Usar Google Apps Script (RECOMENDADO)
-        await enviarViaGoogleAppsScript(excelData, GOOGLE_SCRIPT_URL);
+        await enviarViaGoogleAppsScript(excelData);
         
         // Opción 2: Fallback - Guardar localmente para procesar después
         guardarConsultaLocal(excelData);
@@ -1935,24 +1935,37 @@ async function enviarConsultaAExcel(consultaData) {
 /**
  * Envía datos a Google Apps Script para escribir en Excel
  */
-async function enviarViaGoogleAppsScript(excelData, scriptUrl) {
+async function enviarViaGoogleAppsScript(excelData) {
     try {
-        const response = await fetch(scriptUrl, {
+        console.log('📤 Enviando datos a Google Script:', excelData);
+        
+        // URL de tu Google Apps Script - REEMPLAZA CON TU URL REAL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
+        
+        // Enviar como JSON simple
+        const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Google Apps Script requiere no-cors para web apps
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(excelData)
         });
 
-        // Con no-cors no podemos ver la respuesta, pero confiamos en que se procesó
-        console.log('📨 Datos enviados a Google Apps Script');
+        console.log('✅ Solicitud enviada a Google Apps Script');
+        
+        // Intentar leer la respuesta aunque sea no-cors
+        try {
+            const text = await response.text();
+            console.log('Respuesta del servidor:', text);
+        } catch (readError) {
+            console.log('No se pudo leer respuesta (normal en no-cors)');
+        }
+        
         return true;
         
     } catch (error) {
-        console.warn('❌ Error con Google Apps Script, usando almacenamiento local:', error);
-        throw error; // Propagar error para que se use el fallback
+        console.warn('❌ Error con Google Apps Script:', error);
+        throw error;
     }
 }
 
@@ -2045,7 +2058,7 @@ async function procesarConsultasLocales() {
     for (let i = 0; i < consultasLocales.length; i++) {
         const item = consultasLocales[i];
         try {
-            await enviarViaGoogleAppsScript(item, 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec');
+            await enviarViaGoogleAppsScript(item);
             console.log('✅ Consulta local enviada a Excel');
         } catch (error) {
             pendientes.push(item);
