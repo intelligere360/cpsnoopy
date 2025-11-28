@@ -1942,23 +1942,40 @@ async function enviarViaGoogleAppsScript(excelData) {
         // URL de tu Google Apps Script
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec';
         
-        // ✅ SOLUCIÓN: Usar mode: 'no-cors' y FormData
-        const formData = new URLSearchParams();
-        formData.append('data', JSON.stringify(excelData));
-        
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // ← ESTO ES CLAVE para evitar CORS
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData
+        // ✅ SOLUCIÓN: Usar JSONP mediante un elemento script
+        return new Promise((resolve, reject) => {
+            // Crear callback único
+            const callbackName = 'jsonp_callback_' + Date.now();
+            window[callbackName] = function(response) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                
+                if (response && response.success) {
+                    console.log('✅ Datos enviados a Google Sheets');
+                    resolve(true);
+                } else {
+                    console.warn('❌ Error en respuesta JSONP');
+                    reject(new Error('Error en Google Apps Script'));
+                }
+            };
+            
+            // Convertir datos a parámetros URL
+            const params = new URLSearchParams();
+            params.append('data', JSON.stringify(excelData));
+            params.append('callback', callbackName);
+            
+            // Crear elemento script
+            const script = document.createElement('script');
+            script.src = `${SCRIPT_URL}?${params.toString()}`;
+            script.onerror = () => {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                console.warn('❌ Error cargando script JSONP');
+                reject(new Error('Error de conexión'));
+            };
+            
+            document.body.appendChild(script);
         });
-
-        console.log('✅ Solicitud enviada a Google Apps Script (no-cors)');
-        
-        // Con no-cors no podemos leer la respuesta, pero confiamos en que funciona
-        return true;
         
     } catch (error) {
         console.warn('❌ Error con Google Apps Script:', error);
@@ -2064,4 +2081,5 @@ async function procesarConsultasLocales() {
     
     localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
 }
+
 
