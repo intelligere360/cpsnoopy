@@ -1471,8 +1471,8 @@ input, textarea {
 /* ========== VERSIÓN ESCRITORIO ========== */
 @media (min-width: 769px) {
     .product-badge {
-        top: 10px;
-        right: 10px;
+        top: 40px;
+        right: -15px;
         padding: 5px 12px;
         border-radius: 20px;
         font-size: 12px;
@@ -1481,8 +1481,8 @@ input, textarea {
     }
     
     .modal-badge {
-        top: 15px;
-        right: 15px;
+        top: 45px;
+        right: -5px;
         padding: 8px 16px;
         border-radius: 25px;
         font-size: 14px;
@@ -1494,8 +1494,8 @@ input, textarea {
 /* ========== VERSIÓN MÓVIL MEJORADA ========== */
 @media (max-width: 768px) {
     .product-badge {
-        top: 5px;
-        right: 5px;
+        top: 25px;
+        right: -10px;
         padding: 3px 8px;
         font-size: 9px;
         border-radius: 12px;
@@ -1541,7 +1541,7 @@ input, textarea {
     }
     
     .modal-badge {
-        top: 5px;
+        top: 35px;
         right: 5px;
         padding: 3px 8px;
         font-size: 9px;
@@ -1559,7 +1559,7 @@ input, textarea {
     }
     
     .modal-badge {
-        top: 5px;
+        top: 35px;
         right: 5px;
         padding: 3px 8px;
         font-size: 9px;
