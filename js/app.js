@@ -456,28 +456,15 @@ async function enviarNotificacionProveedor(producto, tipoContacto) {
         producto: {
             id: producto.id,
             nombre: producto.nombre,
-            precio: formatearPrecio(producto.precioMin, producto.precioMax),
-            categoria: producto.categoria
+            categoria: producto.categoria,
+            precioMin: producto.precioMin,
+            precioMax: producto.precioMax
         }
     };
 
-    async function registrarConsultaEnExcel(producto, tipoContacto) {
-        const usuario = obtenerDatosUsuario();
-        
-        const consultaData = {
-            timestamp: new Date().toISOString(),
-            tipo: tipoContacto,
-            usuario: usuario,
-            producto: {
-                id: producto.id,
-                nombre: producto.nombre,
-                precio: formatearPrecio(producto.precioMin, producto.precioMax),
-                categoria: producto.categoria
-            }
-        };
-        
+    async function registrarConsultaEnExcel(notificationData) {   
         // Incrementar contador local
-        incrementarContadorConsulta(producto.id);
+        incrementarContadorConsulta(notificationData.producto.id);
         
         // Enviar a servidor/Google Apps Script para Excel
         await enviarConsultaAExcel(consultaData);
@@ -496,6 +483,7 @@ async function enviarNotificacionProveedor(producto, tipoContacto) {
 
     try {
         await enviarNotificacionEmail(notificationData);
+        await registrarConsultaEnExcel(notificationData)
         console.log('✅ Notificación enviada al proveedor');
         mostrarNotificacion('Interés registrado correctamente', 'success');
         return Promise.resolve();
@@ -802,7 +790,7 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
             
             // ✅ NUEVO: Badge "NUEVO" si el producto es nuevo
             const badgeNuevo = producto.nuevo 
-                ? `<div class="product-badge" data-product-id="${producto.id}">¡Nuevo!</div>` : '';
+                ? `<div class="product-badge" data-product-id="${producto.id}">¡Como Nuevo!</div>` : '';
 
             return `
             <div class="product-card" 
@@ -965,7 +953,7 @@ async function mostrarDetallesProducto(productoId) {
         : `<div class="product-price no-price">Consultar precio</div>`;
     
     // ✅ NUEVO: Badge "NUEVO" para el modal
-    const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Nuevo!</div>` : '';
+    const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Como Nuevo!</div>` : '';
 
     // ✅ NUEVO: Mostrar esqueleto de carga mientras se obtienen las imágenes
     modalContent.innerHTML = `
@@ -980,7 +968,10 @@ async function mostrarDetallesProducto(productoId) {
                 <h2>${producto.nombre}</h2>
                 <p class="product-category">${producto.categoria}</p>
                 ${precioHTML}
-                <div class="product-description">${producto.descripcion}</div>
+                <div class="product-specs">
+                    <h4>Descripción:</h4>
+                    <p class="product-description">${producto.descripcion}</p>
+                </div>
                 ${formatearEspecificaciones(producto.especificaciones)}
             </div>
         </div>
@@ -990,7 +981,8 @@ async function mostrarDetallesProducto(productoId) {
     await crearCarruselConCache(producto);
     
     // Actualizar enlaces de contacto
-    const mensaje = `Hola, me interesa: ${producto.nombre} - ${formatearPrecio(producto.precioMin, producto.precioMax)}`;
+    const str_precio_saber = AppState.config.mostrar_precios ? formatearPrecio(producto.precioMin, producto.precioMax) : `¿Cuándo y dónde lo puedo ver?`;
+    const mensaje = `Hola, me interesa: ${producto.nombre} - ${str_precio_saber}`;
     const urlWhatsapp = `https://wa.me/${configContacto.whatsapp}?text=${encodeURIComponent(mensaje)}`;
     document.getElementById('whatsappModal').href = urlWhatsapp;
     
@@ -1067,7 +1059,7 @@ async function crearCarruselConCache(producto) {
         ` : '';
 
         // ✅ NUEVO: Badge "NUEVO" para el carrusel
-        const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Nuevo!</div>` : '';
+        const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Como Nuevo!</div>` : '';
         
         // ✅ NUEVO: Reemplazar el esqueleto con el carrusel real
         detailImages.innerHTML = `
@@ -1727,7 +1719,19 @@ function configurarDeteccionConexion() {
     window.addEventListener('online', () => {
         mostrarNotificacion('Conexión restablecida', 'success');
         procesarColaOffline();
+        setTimeout(() => {
+            procesarColaExcel();
+            procesarConsultasLocales();
+        }, 3000);
     });
+
+    // Procesar al cargar la página si hay conexión
+    if (navigator.onLine) {
+        setTimeout(() => {
+            procesarColaExcel();
+            procesarConsultasLocales();
+        }, 5000);
+    }
 
     window.addEventListener('offline', () => {
         mostrarNotificacion('Sin conexión - Los mensajes se enviarán después', 'info');
@@ -1751,6 +1755,9 @@ function filtrarProductos() {
 
 function cargarCategorias() {
     const categorias = [...new Set(productos.map(p => p.categoria))];
+    // ✅ ORDENAR CATEGORÍAS ALFABÉTICAMENTE DE FORMA INCREMENTAL (A-Z)
+    categorias.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
     const filter = document.getElementById('categoryFilter');
     
     if (filter) {
@@ -1893,4 +1900,173 @@ function mostrarLoaderRapido() {
 function ocultarLoaderRapido() {
     const loader = document.getElementById('quickLoader');
     if (loader) loader.style.display = 'none';
+}
+
+/**
+ * Envía consulta a Google Sheets/Excel en Google Drive
+ * @param {Object} consultaData - Datos de la consulta del producto
+ */
+async function enviarConsultaAExcel(consultaData) {
+    try {
+        console.log('📊 Enviando consulta a Excel...');
+        
+        // ID del archivo Excel en Google Drive (debes reemplazar con tu ID real)
+        const EXCEL_FILE_ID = '1V_um2ji8xkr0nX-dn8hNN91MWyzH1n_K'; // ← REEMPLAZAR CON ID REAL
+        
+        // URL de Google Apps Script para procesar los datos
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec'; // ← REEMPLAZAR CON URL REAL
+        
+        // Preparar datos para el Excel (mapear a las columnas del Excel)
+        const excelData = {
+            product_id: consultaData.producto.id,
+            product_name: consultaData.producto.nombre,
+            product_category: consultaData.producto.categoria,
+            precioMin: consultaData.producto.precioMin,
+            precioMax: consultaData.producto.precioMax,
+            fecha: new Date(consultaData.timestamp).toLocaleDateString('es-ES'),
+            hora: new Date(consultaData.timestamp).toLocaleTimeString('es-ES'),
+            contact_type: consultaData.tipo,
+            user_platform: consultaData.usuario.plataforma,
+            user_agent: consultaData.usuario.userAgent,
+            status: 'registrado',
+            session_id: consultaData.usuario.sessionId,
+            timestamp: consultaData.timestamp
+        };
+
+        // Opción 1: Usar Google Apps Script (RECOMENDADO)
+        await enviarViaGoogleAppsScript(excelData, GOOGLE_SCRIPT_URL);
+        
+        // Opción 2: Fallback - Guardar localmente para procesar después
+        guardarConsultaLocal(excelData);
+        
+        console.log('✅ Consulta registrada para Excel');
+        
+    } catch (error) {
+        console.error('❌ Error enviando consulta a Excel:', error);
+        // Guardar en cola local para reintentar después
+        guardarEnColaExcel(consultaData);
+    }
+}
+
+/**
+ * Envía datos a Google Apps Script para escribir en Excel
+ */
+async function enviarViaGoogleAppsScript(excelData, scriptUrl) {
+    try {
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors', // Google Apps Script requiere no-cors para web apps
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(excelData)
+        });
+
+        // Con no-cors no podemos ver la respuesta, pero confiamos en que se procesó
+        console.log('📨 Datos enviados a Google Apps Script');
+        return true;
+        
+    } catch (error) {
+        console.warn('❌ Error con Google Apps Script, usando almacenamiento local:', error);
+        throw error; // Propagar error para que se use el fallback
+    }
+}
+
+/**
+ * Guarda consulta localmente para procesar después
+ */
+function guardarConsultaLocal(excelData) {
+    try {
+        let consultasLocales = JSON.parse(localStorage.getItem('consultas_excel_pendientes') || '[]');
+        
+        consultasLocales.push({
+            ...excelData,
+            intentos: 0,
+            fechaCreacion: new Date().toISOString()
+        });
+        
+        localStorage.setItem('consultas_excel_pendientes', JSON.stringify(consultasLocales));
+        console.log('💾 Consulta guardada localmente para Excel');
+        
+    } catch (error) {
+        console.error('❌ Error guardando consulta local:', error);
+    }
+}
+
+/**
+ * Guarda en cola para reintentos
+ */
+function guardarEnColaExcel(consultaData) {
+    try {
+        let colaExcel = JSON.parse(localStorage.getItem('cola_excel_pendientes') || '[]');
+        
+        colaExcel.push({
+            ...consultaData,
+            intentos: 0,
+            fechaCreacion: new Date().toISOString()
+        });
+        
+        localStorage.setItem('cola_excel_pendientes', JSON.stringify(colaExcel));
+        console.log('📦 Consulta en cola para Excel');
+        
+    } catch (error) {
+        console.error('❌ Error guardando en cola Excel:', error);
+    }
+}
+
+/**
+ * Procesa consultas pendientes para Excel cuando hay conexión
+ */
+async function procesarColaExcel() {
+    if (!navigator.onLine) return;
+    
+    let colaExcel = JSON.parse(localStorage.getItem('cola_excel_pendientes') || '[]');
+    if (colaExcel.length === 0) return;
+
+    console.log(`🔄 Procesando ${colaExcel.length} consultas pendientes para Excel...`);
+    
+    const pendientes = [];
+    
+    for (let i = 0; i < colaExcel.length; i++) {
+        const item = colaExcel[i];
+        if (item.intentos < 3) {
+            try {
+                await enviarConsultaAExcel(item);
+                console.log('✅ Consulta Excel pendiente procesada');
+            } catch (error) {
+                item.intentos++;
+                pendientes.push(item);
+            }
+        } else {
+            console.warn('❌ Consulta Excel descartada después de 3 intentos:', item);
+        }
+    }
+    
+    localStorage.setItem('cola_excel_pendientes', JSON.stringify(pendientes));
+}
+
+/**
+ * Procesa consultas locales guardadas
+ */
+async function procesarConsultasLocales() {
+    if (!navigator.onLine) return;
+    
+    let consultasLocales = JSON.parse(localStorage.getItem('consultas_excel_pendientes') || '[]');
+    if (consultasLocales.length === 0) return;
+
+    console.log(`🔄 Procesando ${consultasLocales.length} consultas locales...`);
+    
+    const pendientes = [];
+    
+    for (let i = 0; i < consultasLocales.length; i++) {
+        const item = consultasLocales[i];
+        try {
+            await enviarViaGoogleAppsScript(item, 'https://script.google.com/macros/s/AKfycbxmpC7OfqAo_r5K7affexSoCS9csY2iqg7XYaEv_dBLtdNwoslCGoayMRqKiEWPyEEDhw/exec');
+            console.log('✅ Consulta local enviada a Excel');
+        } catch (error) {
+            pendientes.push(item);
+        }
+    }
+    
+    localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
 }

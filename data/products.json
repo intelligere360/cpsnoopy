@@ -355,7 +355,7 @@
         "precioMax": 45.00,
         "descripcion": "Instrumento de laboratorio esencial utilizado para examinar objetos demasiado pequeños para ser vistos a simple vista.",
         "especificaciones": "; Es el tipo de microscopio más común utilizado en laboratorios de enseñanza y se usa para observar muestras delgadas como cortes de tejido, frotis de sangre y bacterias; Utiliza dos sistemas de lentes (oculares y objetivos) para magnificar la imagen de la muestra; La microscopía permite estudios detallados en campos como la botánica, la zoología y la ciencia de materiales; Funciona transmitiendo luz a través de la muestra para ver su composición interna",
-        "nuevo": true,
+        "nuevo": false,
         "imageCount": 1,
         "activo": true,
         "imagenes": [
