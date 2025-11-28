@@ -87,7 +87,7 @@ const AppState = {
     imagenesPrecargadas: new Set(),
     // ✅ NUEVO: Configuración de la aplicación
     config: {
-        mostrar_precios: true, // Valor por defecto
+        mostrar_precios: false, // Valor por defecto
         version: "1.0.0",
         idioma: "es"
     }
@@ -644,9 +644,7 @@ async function cargarProductos(forzarActualizacion = false) {
         mostrarEsqueletosCarga();
         
         // Cargar configuración si no se ha cargado
-        if (!AppState.config.version) {
-            await cargarConfiguracion();
-        }
+        await cargarConfiguracion();
         
         // 1. CARGAR JSON PRIMERO
         const jsonProxyUrl = getProductsJsonUrl();
