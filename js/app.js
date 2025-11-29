@@ -1951,6 +1951,19 @@ async function procesarConsultasLocales() {
 /**
  * Sistema de precarga persistente que intenta descargar imágenes continuamente
  */
+/**
+ * Envía URLs al Service Worker para precache agresivo
+ */
+function enviarUrlsAlServiceWorker(urls) {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+            type: 'PRECACHE_IMAGES',
+            urls: urls
+        });
+        console.log('📤 Enviadas URLs al Service Worker para precache:', urls.length);
+    }
+}
+// Clase PersistentImagePreloader =========================================
 class PersistentImagePreloader {
     constructor() {
         this.isPreloading = false;
@@ -2032,6 +2045,9 @@ class PersistentImagePreloader {
             .slice(0, this.batchSize);
         
         console.log(`🔄 Precargando lote de ${urlsToProcess.length} imágenes...`);
+
+        // ✅ ENVIAR AL SERVICE WORKER TAMBIÉN
+        enviarUrlsAlServiceWorker(urlsToProcess);
 
         const results = await Promise.allSettled(
             urlsToProcess.map(url => this.preloadSingleImage(url))
