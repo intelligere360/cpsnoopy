@@ -410,6 +410,31 @@ function actualizarImagenProducto(productoId, imagenUrl) {
 // FUNCIONES DE UTILIDAD PARA NOTIFICACIONES
 // =============================================
 
+/**
+ * Maneja errores de carga de imágenes
+ */
+async function manejarErrorImagen(imgElement, urlOriginal) {
+    console.warn('❌ Error cargando imagen, intentando desde cache:', urlOriginal);
+    
+    try {
+        // Intentar obtener desde cache
+        const cachedImage = await ImageCacheDB.getImage(urlOriginal);
+        if (cachedImage) {
+            imgElement.src = URL.createObjectURL(cachedImage);
+            imgElement.style.opacity = '1';
+            console.log('✅ Imagen recuperada desde cache después de error');
+        } else {
+            // Usar placeholder
+            imgElement.src = './images/placeholder.jpg';
+            imgElement.style.opacity = '1';
+            console.log('🟡 Usando placeholder después de error');
+        }
+    } catch (error) {
+        imgElement.src = './images/placeholder.jpg';
+        imgElement.style.opacity = '1';
+    }
+}
+
 function generarSessionId() {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
@@ -627,7 +652,6 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
     
     console.log('🖼️ Renderizando desde cache...');
 
-    // ✅ NUEVO: Obtener configuración de precios
     const mostrarPrecios = debeMostrarPrecios();
     
     // Crear HTML con imágenes desde cache
@@ -635,27 +659,29 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
         productosAMostrar.map(async (producto) => {
             let imagenSrc = './images/placeholder.jpg';
             
-            // Intentar obtener imagen desde cache
+            // ✅ MEJORADO: Intentar múltiples fuentes
             if (producto.imagenPrincipal) {
                 try {
                     const cachedImage = await ImageCacheDB.getImage(producto.imagenPrincipal);
                     if (cachedImage) {
                         imagenSrc = URL.createObjectURL(cachedImage);
                         console.log('✅ Imagen servida desde cache:', producto.nombre);
+                    } else {
+                        // Si no está en cache, usar la URL original pero forzar descarga
+                        imagenSrc = producto.imagenPrincipal;
+                        console.log('🌐 Imagen servida desde red:', producto.nombre);
                     }
                 } catch (error) {
                     console.warn('❌ Error obteniendo imagen de cache:', error);
+                    imagenSrc = producto.imagenPrincipal;
                 }
             }
             
-            // ✅ NUEVO: Mostrar u ocultar precio según configuración
             const precioHTML = mostrarPrecios 
-                ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
-                : `` //<div class="product-price no-price">Precio no disponible</div>`;
+                ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>` : ``;
             
-            // ✅ NUEVO: Badge "NUEVO" si el producto es nuevo
             const badgeNuevo = producto.nuevo 
-                ? `<div class="product-badge" data-product-id="${producto.id}">¡Como Nuevo!</div>` : '';
+                ? `<div class="product-badge" data-product-id="${producto.id}">¡Como Nuevo!</div>` : ``;
 
             return `
             <div class="product-card" 
@@ -667,8 +693,8 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
                          class="product-image"
                          loading="lazy"
                          onload="this.style.opacity='1'"
-                         onerror="this.src='./images/placeholder.jpg'; this.style.opacity='1'"
-                         style="opacity: ${AppState.imagenesPrecargadas.has(producto.imagenPrincipal) ? '1' : '0.7'}; transition: opacity 0.3s ease">
+                         onerror="manejarErrorImagen(this, '${producto.imagenPrincipal}')"
+                         style="opacity: 0.7; transition: opacity 0.3s ease">
                     ${badgeNuevo}
                 </div>
                 <div class="product-info">
@@ -676,11 +702,16 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
                     ${precioHTML}
                 </div>
             </div>
-            `; // <div class="product-category">${producto.categoria}</div>
+            `;
         })
     );
     
     grid.innerHTML = productosHTML.join('');
+    
+    // ✅ FORZAR ACTUALIZACIÓN DESPUÉS DE RENDERIZAR
+    setTimeout(() => {
+        imagePreloader.actualizarImagenesVisibles();
+    }, 1000);
 }
 
 /**
@@ -2122,32 +2153,48 @@ class PersistentImagePreloader {
      * Notifica cuando una imagen se carga para actualizar UI si es necesario
      */
     notifyImageLoaded(imageUrl) {
-        // Buscar productos que usen esta imagen y actualizar si están visibles
+        // Actualizar imágenes visibles después de cada lote
         setTimeout(() => {
-            const productCards = document.querySelectorAll('.product-card');
-            productCards.forEach(card => {
-                const img = card.querySelector('.product-image');
-                if (img && img.src === imageUrl) {
-                    // Forzar recarga suave de la imagen
-                    img.style.opacity = '0.7';
-                    setTimeout(() => {
-                        img.style.opacity = '1';
-                        img.style.transition = 'opacity 0.5s ease';
-                    }, 100);
-                }
-            });
-        }, 100);
+            this.actualizarImagenesVisibles();
+        }, 500);
     }
-
+    /**
+     * Actualiza todas las imágenes visibles con versiones cacheadas
+     */
+    async actualizarImagenesVisibles() {
+        const productCards = document.querySelectorAll('.product-card');
+        
+        for (const card of productCards) {
+            const img = card.querySelector('.product-image');
+            if (img && img.src && !img.src.includes('placeholder')) {
+                try {
+                    const cachedImage = await ImageCacheDB.getImage(img.src);
+                    if (cachedImage) {
+                        const cachedUrl = URL.createObjectURL(cachedImage);
+                        // Solo actualizar si es diferente
+                        if (img.src !== cachedUrl) {
+                            img.src = cachedUrl;
+                            console.log('🔄 Imagen actualizada en UI:', this.getShortUrl(img.src));
+                        }
+                    }
+                } catch (error) {
+                    // Silenciar errores
+                }
+            }
+        }
+    }
     /**
      * Obtiene URL abreviada para logging
      */
     getShortUrl(url) {
         try {
             const urlObj = new URL(url);
-            return urlObj.pathname.split('/').pop() || url.substring(0, 50);
+            // Extraer el ID de Google Drive de la URL
+            const idMatch = url.match(/id=([^&]+)/);
+            if (idMatch) return `Drive:${idMatch[1].substring(0, 8)}...`;
+            return urlObj.pathname.split('/').pop() || url.substring(0, 30);
         } catch {
-            return url.substring(0, 50);
+            return url.substring(0, 30);
         }
     }
 
@@ -2220,7 +2267,9 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         aplicarConfiguracionPrecios();
 
         // 4. ✅ INICIAR PRECARGA PERSISTENTE EN SEGUNDO PLANO
-        imagePreloader.startPersistentPreloading(productos);
+        setTimeout(() => {
+            imagePreloader.startPersistentPreloading(productos);
+        }, 500);
         
         // 5. OCULTAR LOADER
         ocultarLoaderRapido();
