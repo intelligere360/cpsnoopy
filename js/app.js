@@ -617,125 +617,6 @@ function configurarTrackingContacto() {
     });
 }
 
-// =============================================
-// CARGA PROGRESIVA DE PRODUCTOS
-// =============================================
-// =============================================
-// CARGA PROGRESIVA DE PRODUCTOS - VERSIÓN OPTIMIZADA
-// =============================================
-async function cargarProductos(forzarActualizacion = false) {
-    try {
-        console.log('📦 Iniciando carga de productos...');
-        mostrarLoaderRapido(); // ← Mostrar loader
-        mostrarEsqueletosCarga();
-        
-        // Cargar configuración si no se ha cargado
-        await cargarConfiguracion();
-        
-        // 1. CARGAR JSON PRIMERO
-        const jsonProxyUrl = getProductsJsonUrl();
-        const response = await fetch(jsonProxyUrl);
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-        
-        const productosData = await response.json();
-        
-        // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
-        productos = productosData.map(producto => {
-            const imagenesProcesadas = procesarImagenesDesdeJSON(producto);
-            const imagenPrincipal = obtenerImagenPrincipalDesdeJSON({ ...producto, imagenes: imagenesProcesadas });
-            return {
-                ...producto,
-                imagenes: imagenesProcesadas,
-                imagenPrincipal: imagenPrincipal
-            };
-        });
-        
-        guardarCacheLocal(productos);
-        console.log(`✅ ${productos.length} productos procesados`);
-        
-        // ✅ MOSTRAR PRODUCTOS INMEDIATAMENTE
-        await mostrarProductosDesdeCache(productos);
-        cargarCategorias();
-        actualizarBadgesConsultas();
-        aplicarConfiguracionPrecios();
-
-        // ✅ OCULTAR LOADER INMEDIATAMENTE
-        ocultarLoaderRapido();
-        
-        // ✅ PRECARGAR SOLO SI FALTAN IMÁGENES (no bloqueante)
-        precargarImagenesFaltantes(productos);
-        
-    } catch (error) {
-        console.error('❌ Error cargando productos:', error);
-        ocultarLoaderRapido(); // ← Asegurar ocultar en error
-        await cargarDesdeCache();
-    }
-}
-
-/**
- * Precarga solo las imágenes que no están en cache
- */
-async function precargarImagenesFaltantes(productos) {
-    console.log('🔍 Verificando imágenes faltantes en cache...');
-    
-    const imagenesParaCachear = [];
-    
-    // Recolectar URLs únicas
-    productos.forEach(producto => {
-        if (producto.imagenes && producto.imagenes.length > 0) {
-            producto.imagenes.forEach(imagen => {
-                if (imagen.url && !imagen.url.includes('placeholder')) {
-                    imagenesParaCachear.push(imagen.url);
-                }
-            });
-        }
-    });
-    
-    const urlsUnicas = [...new Set(imagenesParaCachear)];
-    let imagenesFaltantes = 0;
-    
-    // Verificar rápidamente qué imágenes faltan
-    for (const url of urlsUnicas) {
-        try {
-            const existe = await ImageCacheDB.imageExists(url);
-            if (!existe) {
-                imagenesFaltantes++;
-                // Descargar en segundo plano
-                descargarImagenEnSegundoPlano(url);
-            }
-        } catch (error) {
-            console.warn('Error verificando:', url);
-        }
-    }
-    
-    if (imagenesFaltantes > 0) {
-        console.log(`📥 Descargando ${imagenesFaltantes} imágenes faltantes en segundo plano...`);
-    } else {
-        console.log('✅ Todas las imágenes ya están en cache');
-    }
-}
-
-/**
- * Descarga una imagen individual en segundo plano
- */
-async function descargarImagenEnSegundoPlano(urlImagen) {
-    try {
-        const response = await fetch(urlImagen, {
-            mode: 'cors',
-            credentials: 'omit',
-            priority: 'low' // Navegador puede dar menor prioridad
-        });
-        
-        if (response.ok) {
-            const blob = await response.blob();
-            await ImageCacheDB.saveImage(urlImagen, blob);
-            console.log('💾 Imagen descargada en segundo plano:', urlImagen);
-        }
-    } catch (error) {
-        console.warn('❌ Error descargando imagen en segundo plano:', urlImagen);
-    }
-}
-
 async function mostrarProductosDesdeCache(productosAMostrar) {
     const grid = document.getElementById('productsGrid');
     
@@ -1653,8 +1534,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         emailjs.init(configContacto.proveedor.userId);
     }
     
-    // 5. Cargar productos (ahora con carga progresiva)
-    cargarProductos();
+    // 5. Cargar productos CON PRECARGA PERSISTENTE
+    cargarProductosConPrecargaPersistente();
     
     // 6. Configurar eventos básicos
     configurarEventListeners();
@@ -1700,7 +1581,11 @@ function configurarEventListeners() {
 function configurarDeteccionConexion() {
     // Detectar cambios de conexión
     window.addEventListener('online', () => {
-        mostrarNotificacion('Conexión restablecida', 'success');
+        mostrarNotificacion('Conexión restablecida - Reanudando precarga', 'success');
+        // Reanudar precarga persistente si hay productos cargados
+        if (productos.length > 0) {
+            imagePreloader.resumeWithNewProducts(productos);
+        }
         procesarColaOffline();
         setTimeout(() => {
             procesarColaExcel();
@@ -2057,4 +1942,276 @@ async function procesarConsultasLocales() {
     }
     
     localStorage.setItem('consultas_excel_pendientes', JSON.stringify(pendientes));
+}
+
+// =============================================
+// SISTEMA DE PRECARGA PERSISTENTE DE IMÁGENES
+// =============================================
+
+/**
+ * Sistema de precarga persistente que intenta descargar imágenes continuamente
+ */
+class PersistentImagePreloader {
+    constructor() {
+        this.isPreloading = false;
+        this.currentBatch = 0;
+        this.maxRetries = 5;
+        this.retryDelay = 5000; // 5 segundos entre intentos
+        this.batchSize = 3; // Imágenes simultáneas
+        this.pendingUrls = new Set();
+        this.retryCounts = new Map();
+    }
+
+    /**
+     * Inicia el sistema de precarga persistente
+     */
+    startPersistentPreloading(productos) {
+        if (this.isPreloading) return;
+        
+        console.log('🚀 Iniciando precarga persistente de imágenes...');
+        this.isPreloading = true;
+        
+        // Recolectar todas las URLs de imágenes
+        this.collectImageUrls(productos);
+        
+        // Iniciar el bucle de precarga
+        this.preloadLoop();
+        
+        // También precargar inmediatamente
+        this.preloadBatch();
+    }
+
+    /**
+     * Recolecta todas las URLs de imágenes de los productos
+     */
+    collectImageUrls(productos) {
+        this.pendingUrls.clear();
+        
+        productos.forEach(producto => {
+            if (producto.imagenes && producto.imagenes.length > 0) {
+                producto.imagenes.forEach(imagen => {
+                    if (imagen.url && 
+                        !imagen.url.includes('placeholder') && 
+                        !imagen.url.includes('undefined')) {
+                        this.pendingUrls.add(imagen.url);
+                    }
+                });
+            }
+        });
+        
+        console.log(`📸 ${this.pendingUrls.size} imágenes para precargar`);
+    }
+
+    /**
+     * Bucle principal de precarga
+     */
+    async preloadLoop() {
+        while (this.isPreloading && this.pendingUrls.size > 0) {
+            await this.delay(this.retryDelay);
+            
+            // Verificar conexión antes de intentar
+            if (navigator.onLine) {
+                await this.preloadBatch();
+            } else {
+                console.log('🌐 Sin conexión, esperando para reintentar precarga...');
+            }
+        }
+        
+        if (this.pendingUrls.size === 0) {
+            console.log('✅ Todas las imágenes precargadas exitosamente');
+        }
+    }
+
+    /**
+     * Precarga un lote de imágenes
+     */
+    async preloadBatch() {
+        if (this.pendingUrls.size === 0) return;
+
+        const urlsToProcess = Array.from(this.pendingUrls)
+            .slice(0, this.batchSize);
+        
+        console.log(`🔄 Precargando lote de ${urlsToProcess.length} imágenes...`);
+
+        const results = await Promise.allSettled(
+            urlsToProcess.map(url => this.preloadSingleImage(url))
+        );
+
+        // Procesar resultados
+        results.forEach((result, index) => {
+            const url = urlsToProcess[index];
+            
+            if (result.status === 'fulfilled') {
+                // Éxito: remover de pendientes
+                this.pendingUrls.delete(url);
+                this.retryCounts.delete(url);
+                console.log(`✅ Precargada: ${this.getShortUrl(url)}`);
+            } else {
+                // Error: incrementar contador de reintentos
+                const retries = (this.retryCounts.get(url) || 0) + 1;
+                this.retryCounts.set(url, retries);
+                
+                if (retries >= this.maxRetries) {
+                    // Demasiados intentos, remover
+                    this.pendingUrls.delete(url);
+                    this.retryCounts.delete(url);
+                    console.warn(`❌ Removida después de ${retries} intentos: ${this.getShortUrl(url)}`);
+                } else {
+                    console.warn(`⚠️ Reintento ${retries}/${this.maxRetries} para: ${this.getShortUrl(url)}`);
+                }
+            }
+        });
+
+        this.currentBatch++;
+    }
+
+    /**
+     * Precarga una imagen individual con manejo robusto de errores
+     */
+    async preloadSingleImage(url) {
+        try {
+            // 1. Verificar si ya está en cache
+            const existsInCache = await ImageCacheDB.imageExists(url);
+            if (existsInCache) {
+                return { cached: true, url };
+            }
+
+            // 2. Intentar descargar
+            const response = await fetch(url, {
+                mode: 'cors',
+                credentials: 'omit',
+                signal: AbortSignal.timeout(15000) // Timeout de 15 segundos
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            // 3. Guardar en cache
+            const blob = await response.blob();
+            await ImageCacheDB.saveImage(url, blob);
+
+            // 4. Notificar a la UI si es necesario
+            this.notifyImageLoaded(url);
+
+            return { success: true, url };
+
+        } catch (error) {
+            console.warn(`❌ Error precargando ${this.getShortUrl(url)}:`, error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Notifica cuando una imagen se carga para actualizar UI si es necesario
+     */
+    notifyImageLoaded(imageUrl) {
+        // Buscar productos que usen esta imagen y actualizar si están visibles
+        setTimeout(() => {
+            const productCards = document.querySelectorAll('.product-card');
+            productCards.forEach(card => {
+                const img = card.querySelector('.product-image');
+                if (img && img.src === imageUrl) {
+                    // Forzar recarga suave de la imagen
+                    img.style.opacity = '0.7';
+                    setTimeout(() => {
+                        img.style.opacity = '1';
+                        img.style.transition = 'opacity 0.5s ease';
+                    }, 100);
+                }
+            });
+        }, 100);
+    }
+
+    /**
+     * Obtiene URL abreviada para logging
+     */
+    getShortUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.pathname.split('/').pop() || url.substring(0, 50);
+        } catch {
+            return url.substring(0, 50);
+        }
+    }
+
+    /**
+     * Delay helper
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Detiene la precarga
+     */
+    stop() {
+        this.isPreloading = false;
+        console.log('🛑 Precarga persistente detenida');
+    }
+
+    /**
+     * Reanuda la precarga con nuevos productos
+     */
+    resumeWithNewProducts(productos) {
+        this.collectImageUrls(productos);
+        if (!this.isPreloading) {
+            this.startPersistentPreloading(productos);
+        }
+    }
+}
+
+// Instancia global del preloader
+const imagePreloader = new PersistentImagePreloader();
+
+/**
+ * Función mejorada para cargar productos que inicia la precarga persistente
+ */
+async function cargarProductosConPrecargaPersistente(forzarActualizacion = false) {
+    try {
+        console.log('📦 Iniciando carga de productos con precarga persistente...');
+        mostrarLoaderRapido();
+        mostrarEsqueletosCarga();
+        
+        // Cargar configuración
+        await cargarConfiguracion();
+        
+        // 1. CARGAR JSON PRIMERO
+        const jsonProxyUrl = getProductsJsonUrl();
+        const response = await fetch(jsonProxyUrl);
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        
+        const productosData = await response.json();
+        
+        // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
+        productos = productosData.map(producto => {
+            const imagenesProcesadas = procesarImagenesDesdeJSON(producto);
+            const imagenPrincipal = obtenerImagenPrincipalDesdeJSON({ ...producto, imagenes: imagenesProcesadas });
+            return {
+                ...producto,
+                imagenes: imagenesProcesadas,
+                imagenPrincipal: imagenPrincipal
+            };
+        });
+        
+        guardarCacheLocal(productos);
+        console.log(`✅ ${productos.length} productos procesados`);
+        
+        // 3. MOSTRAR PRODUCTOS INMEDIATAMENTE
+        await mostrarProductosDesdeCache(productos);
+        cargarCategorias();
+        actualizarBadgesConsultas();
+        aplicarConfiguracionPrecios();
+
+        // 4. ✅ INICIAR PRECARGA PERSISTENTE EN SEGUNDO PLANO
+        imagePreloader.startPersistentPreloading(productos);
+        
+        // 5. OCULTAR LOADER
+        ocultarLoaderRapido();
+        
+    } catch (error) {
+        console.error('❌ Error cargando productos:', error);
+        ocultarLoaderRapido();
+        await cargarDesdeCache();
+    }
 }

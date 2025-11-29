@@ -11,6 +11,8 @@ const STATIC_FILES = [
   './manifest.json',
   './images/icon-192.png',
   './images/icon-512.png',
+  './images/icon-192-2.png',
+  './images/icon-512-2.png',
   './images/screenshot-mobile.png',
   './images/screenshot-desktop.png',
   './images/placeholder.jpg'
@@ -137,3 +139,38 @@ self.addEventListener('fetch', (event) => {
     });
   }
 });
+
+// En sw.js - agregar después de las estrategias existentes
+
+// ✅ NUEVO: Estrategia de precarga agresiva para imágenes
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'PRECACHE_IMAGES') {
+        event.waitUntil(
+            precacheImages(event.data.urls)
+        );
+    }
+});
+
+async function precacheImages(urls) {
+    const cache = await caches.open(CACHE_NAME);
+    
+    for (const url of urls) {
+        try {
+            // Verificar si ya está en cache
+            const cached = await cache.match(url);
+            if (!cached) {
+                const response = await fetch(url, {
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                if (response.status === 200) {
+                    await cache.put(url, response.clone());
+                    console.log('✅ Precached en SW:', url);
+                }
+            }
+        } catch (error) {
+            console.warn('❌ Error precaching en SW:', url);
+        }
+    }
+}
