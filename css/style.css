@@ -20,27 +20,6 @@ body {
     padding: 20px;
 }
 
-/* HEADER CORREGIDO */
-.header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
-    color: white !important;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.logo-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
 .logo {
     width: 60px !important;
     height: 60px !important;
@@ -1169,14 +1148,6 @@ html, body {
     position: relative; /* Cambiar de fixed a relative */
 }
 
-/* Header fijo para modo app */
-.header-top {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    margin-bottom: 10px;
-}
-
 /* Ajustar para safe areas en dispositivos con muesca */
 @supports(padding: max(0px)) {
     .container {
@@ -1567,4 +1538,69 @@ input, textarea {
         font-size: 8px;
         border-radius: 8px;
     }
+}
+
+/* ============================================= */
+/* ESTILOS PARA LA SEGUNDA IMAGEN DEL HEADER */
+/* ============================================= */
+
+.logo-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.logo-secondary {
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive para la segunda imagen */
+@media (max-width: 768px) {
+    .logo-secondary {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .logo-header {
+        gap: 12px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-secondary {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    .logo-header {
+        gap: 10px;
+    }
+}
+
+/* Efectos hover para ambas imágenes */
+.logo:hover, .logo-secondary:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+/* Asegurar que el header-top se vea bien con la nueva imagen */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
+    color: white !important;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
