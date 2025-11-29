@@ -362,18 +362,18 @@ body {
 }
 
 .product-specs {
-    margin-top: 20px;
-    padding: 15px;
+    margin-top: 5px;
+    padding: 5px;
     background: #f8f9fa;
     border-radius: 8px;
     border-left: 4px solid #3498db;
 }
 
 .product-specs h4 {
-    color: #2c3e50;
-    margin-bottom: 12px;
+    color: #fc2121;
+    margin-bottom: 7px;
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: bold;
 }
 
 .specs-list {
@@ -1112,14 +1112,6 @@ footer {
     line-height: 1.6;
     color: #555;
     margin: 10px 0;
-}
-
-.product-specs {
-    margin-top: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #3498db;
 }
 
 /* Asegurar que el modal tenga suficiente altura */

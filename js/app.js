@@ -770,7 +770,7 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
             // ✅ NUEVO: Mostrar u ocultar precio según configuración
             const precioHTML = mostrarPrecios 
                 ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
-                : `<div class="product-price no-price">Precio no disponible</div>`;
+                : `` //<div class="product-price no-price">Precio no disponible</div>`;
             
             // ✅ NUEVO: Badge "NUEVO" si el producto es nuevo
             const badgeNuevo = producto.nuevo 
@@ -792,11 +792,10 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
                 </div>
                 <div class="product-info">
                     <div class="product-name">${producto.nombre}</div>
-                    <div class="product-category">${producto.categoria}</div>
                     ${precioHTML}
                 </div>
             </div>
-            `;
+            `; // <div class="product-category">${producto.categoria}</div>
         })
     );
     
@@ -934,7 +933,7 @@ async function mostrarDetallesProducto(productoId) {
     const mostrarPrecios = debeMostrarPrecios();
     const precioHTML = mostrarPrecios 
         ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
-        : `<div class="product-price no-price">Consultar precio</div>`;
+        : `` //<div class="product-price no-price">Consultar precio</div>`;
     
     // ✅ NUEVO: Badge "NUEVO" para el modal
     const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Como Nuevo!</div>` : '';
@@ -950,7 +949,7 @@ async function mostrarDetallesProducto(productoId) {
             </div>
             <div class="detail-info">
                 <h2>${producto.nombre}</h2>
-                <p class="product-category">${producto.categoria}</p>
+                <p class="product-category">Categoría: ${producto.categoria}</p>
                 ${precioHTML}
                 <div class="product-specs">
                     <h4>Descripción:</h4>
@@ -1612,14 +1611,14 @@ function inicializarCarrusel(producto) {
  * Formatea las especificaciones como lista HTML con viñetas
  */
 function formatearEspecificaciones(especificaciones) {
-    if (!especificaciones) return '';
+    if (!especificaciones) return ``;
     
     // Dividir por punto y coma y limpiar espacios
     const items = especificaciones.split(';')
         .map(item => item.trim())
         .filter(item => item.length > 0);
     
-    if (items.length === 0) return '';
+    if (items.length === 0) return ``;
     
     // Crear lista HTML
     const listaItems = items.map(item => 
