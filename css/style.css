@@ -1556,13 +1556,13 @@ input, textarea {
     height: 60px !important;
     object-fit: contain;
     border-radius: 8px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: none !important;
+    box-shadow: none !important;
 }
 
-/* Responsive para la segunda imagen */
+/* Responsive para ambas imágenes */
 @media (max-width: 768px) {
-    .logo-secondary {
+    .logo, .logo-secondary {
         width: 50px !important;
         height: 50px !important;
     }
@@ -1574,7 +1574,7 @@ input, textarea {
 }
 
 @media (max-width: 480px) {
-    .logo-secondary {
+    .logo, .logo-secondary {
         width: 45px !important;
         height: 45px !important;
     }
