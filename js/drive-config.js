@@ -2,7 +2,7 @@
 
 const GOOGLE_DRIVE_CONFIG = {
     // AQUÍ TU API KEY
-    API_KEY : "AIzaSyBTTagLZt25QUIbV2ibqDUlC1mAUgquJjY",
+    API_KEY : "",
 
     // ID de la carpeta donde tienes las imágenes
     FOLDER_ID: '16YT-X9Bew6QejnQQY3SZH-Bjah5cJGlY', // ← Este es el ID del JSON, ajusta si es diferente
@@ -101,4 +101,5 @@ async function getConfigJson() {
         const response = await fetch(fallbackUrl);
         return await response.json();
     }
+
 }
