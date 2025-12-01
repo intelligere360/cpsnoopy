@@ -6,7 +6,7 @@
         "precioMin": 180.0,
         "precioMax": 180.0,
         "descripcion": "4 Cauchos Usados All-Terrain LT 265/70/R17.",
-        "especificaciones": "; Juego completo que cubren todas las juntas y sellos del motor; Juntas específicas; Tapa como de la cadena de distribución",
+        "especificaciones": "; Ancho de sección: 265 mm; Relación de aspecto: 70%; Diámetro del rin: 17 pulgadas; Índice de velocidad: \"Q\", velocidad máxima de hasta 160 km/h; Consideraciones: Al ser un neumático \"LT\" (Light Truck), está diseñado para vehículos de carga ligera y camionetas, y suele tener una construcción más robusta",
         "nuevo": false,
         "imageCount": 3,
         "activo": true,
@@ -211,14 +211,14 @@
     },
     {
         "id": 10,
-        "nombre": "Contactor de CA Sassin 3SC8-F115",
+        "nombre": "Contactor de CA Sassin con Protector Exceline",
         "categoria": "Electricidad",
         "precioMin": 60.00,
         "precioMax": 60.00,
-        "descripcion": "Es un componente eléctrico utilizado para controlar circuitos de potencia.",
-        "especificaciones": "; Soporta 250 Amp; Se utiliza principalmente para controlar motores trifásicos y otros circuitos de potencia, incluyendo aplicaciones de aislamiento, conmutación de condensadores e iluminación; El dispositivo cumple con la norma internacional IEC 60947-4-1; Está disponible para varias corrientes y tensiones nominales, diseñadas para uso industrial y residencial",
+        "descripcion": "El Contactor de CA, marca Sassin 3SC8-F115, un componente eléctrico utilizado para controlar circuitos de potencia.",
+        "especificaciones": "; Soporta 250 Amp; Se utiliza principalmente para controlar motores trifásicos y otros circuitos de potencia, incluyendo aplicaciones de aislamiento, conmutación de condensadores e iluminación; El dispositivo cumple con la norma internacional IEC 60947-4-1; Está disponible para varias corrientes y tensiones nominales, diseñadas para uso industrial y residencial; Viene acompañado con un protector de voltaje de alta carga Exceline",
         "nuevo": false,
-        "imageCount": 1,
+        "imageCount": 8,
         "activo": true,
         "imagenes": [
             {
@@ -226,6 +226,48 @@
                 "nombre": "10_1.jpg",
                 "principal": true,
                 "orden": 1
+            },
+            {
+                "id": "1Jkg8z6O_z_t6LEpLtBKsz0HMuruHfsoB",
+                "nombre": "10_2.jpg",
+                "principal": false,
+                "orden": 2
+            },
+            {
+                "id": "1ksGxJNevKKGhqwDEeo3t5GhsOOicleVh",
+                "nombre": "10_3.jpg",
+                "principal": false,
+                "orden": 3
+            },
+            {
+                "id": "1uL7MutuMoGjtkwzD9htXAddd-udSP_Gs",
+                "nombre": "10_4.jpg",
+                "principal": false,
+                "orden": 4
+            },
+            {
+                "id": "1q4ybuSO70Es-BS4xH8HZcGWtJDpHF3P0",
+                "nombre": "10_5.jpg",
+                "principal": false,
+                "orden": 5
+            },
+            {
+                "id": "11_K6NRG10Hpnm_3eD1ex5Ywu8y0w7ZZY",
+                "nombre": "10_6.jpg",
+                "principal": false,
+                "orden": 6
+            },
+            {
+                "id": "103F7RbZ9SklzEP5PWwAy7ZxfsqCJrwLL",
+                "nombre": "10_7.jpg",
+                "principal": false,
+                "orden": 7
+            },
+            {
+                "id": "1lpqF6WaQE3aFrHA9SKOc0O0e2glhmDMT",
+                "nombre": "10_8.jpg",
+                "principal": false,
+                "orden": 8
             }
         ],
         "vendido": false
@@ -322,12 +364,12 @@
     },
     {
         "id": 15,
-        "nombre": "Router y módem CANTV inalámbrico ADSL2+ ZTE ZXHN H108N",
+        "nombre": "Módem CANTV para Internet de línea Alámbrica",
         "categoria": "Tecnología",
         "precioMin": 20.00,
         "precioMax": 20.00,
         "descripcion": "Es un dispositivo de acceso a banda ancha que proporciona acceso a Internet de alta velocidad a través de redes ADSL2+ o VDSL2.",
-        "especificaciones": "; Ofrece estabilidad y altas velocidades de conexión; El nombre de usuario y la contraseña predeterminados para iniciar sesión en la configuración del router suelen ser \"admin\" para ambos campos; Se puede restablecer a la configuración de fábrica presionando y manteniendo presionado el botón negro pequeño en la parte posterior durante aproximadamente 10 segundos",
+        "especificaciones": "; Funciona con la línea Alámbrica que baja desde el poste; Ofrece estabilidad y altas velocidades de conexión; El nombre de usuario y la contraseña predeterminados para iniciar sesión en la configuración del router suelen ser \"admin\" para ambos campos; Se puede restablecer a la configuración de fábrica presionando y manteniendo presionado el botón negro pequeño en la parte posterior durante aproximadamente 10 segundos",
         "nuevo": false,
         "imageCount": 2,
         "activo": true,
@@ -490,6 +532,45 @@
                 "nombre": "20_1.jpg",
                 "principal": true,
                 "orden": 1
+            }
+        ],
+        "vendido": false
+    },
+    {
+        "id": 21,
+        "nombre": "Cortadora circular para telas",
+        "categoria": "Herramientas",
+        "precioMin": 50.00,
+        "precioMax": 50.00,
+        "descripcion": "Cortadora circular eléctrica, modelo de 4 pulgadas marca Lunasew+.",
+        "especificaciones": "; Es una herramienta ideal para talleres de costura, tapicería y confección industrial; Permite cortar múltiples capas de tela con precisión y rapidez; Cuenta con una hoja circular afilada que gira a alta velocidad para realizar cortes limpios; Diseño ergonómico para facilitar su manejo y reducir la fatiga del usuario; Adecuada para cortar diversos tipos de telas, incluyendo algodón, lino, seda, mezclilla y materiales sintéticos; Disco circular de 110 mm de acero; Motor potente y de bajo consumo; Base plana para cortes precisos",
+        "nuevo": true,
+        "imageCount": 4,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "15lbWwCz5Nyo1H-WdH0XPCbruIObjdTWq",
+                "nombre": "21_1.jpg",
+                "principal": false,
+                "orden": 1
+            },
+            {
+                "id": "172dINOF9a0vPM9uEgKh9YmwsaUQszfOe",
+                "nombre": "21_2.jpg",
+                "principal": true,
+                "orden": 2
+            },
+            {
+                "id": "11E5d0XCZ5u8JLvelFMce5JBuMok0dBGC",
+                "nombre": "21_3.jpg",
+                "principal": false,
+                "orden": 3
+            },
+            {
+                "id": "1qC2PENE1zRX1cWrciDIgOl2JXga70uMq",
+                "nombre": "21_4.jpg",
+                "principal": false,
+                "orden": 4
             }
         ],
         "vendido": false

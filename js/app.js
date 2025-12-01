@@ -2063,6 +2063,7 @@ class PersistentImagePreloader {
         
         if (this.pendingUrls.size === 0) {
             console.log('✅ Todas las imágenes precargadas exitosamente');
+            mostrarNotificacion('✅ Todas las imágenes precargadas exitosamente', 'success');
         }
     }
 
