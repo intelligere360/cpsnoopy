@@ -104,13 +104,7 @@ async function cargarConfiguracion() {
     try {
         console.log('⚙️ Cargando configuración...');
         
-        // Intentar cargar desde Google Drive
-        const configUrl = getConfigJsonUrl();
-        const response = await fetch(configUrl);
-        
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-        
-        const configData = await response.json();
+        const configData = await getConfigJson();
         
         // Actualizar configuración
         if (configData && configData.length > 0) {
@@ -2241,11 +2235,8 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         await cargarConfiguracion();
         
         // 1. CARGAR JSON PRIMERO
-        const jsonProxyUrl = getProductsJsonUrl();
-        const response = await fetch(jsonProxyUrl);
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-        
-        const productosData = await response.json();
+        // Usar la nueva función
+        const productosData = await getProductsJson();
         
         // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
         productos = productosData.map(producto => {
