@@ -15,10 +15,7 @@ const STATIC_FILES = [
   './images/icon-512-2.png',
   './images/screenshot-mobile.png',
   './images/screenshot-desktop.png',
-  './images/placeholder.jpg',
-  // ✅ AÑADIR ARCHIVOS DE DATOS
-  './data/products.json',
-  './data/config.json'
+  './images/placeholder.jpg'
 ];
 
 // Instalación - Cache de archivos estáticos

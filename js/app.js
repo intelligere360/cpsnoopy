@@ -67,7 +67,7 @@ const configContacto = {
     whatsapp: "584126597297", 
     email: "ramonsimancas61@gmail.com",
     mensajeWhatsapp: "Hola, me interesan sus artículos del catálogo",
-    vendedor: "Peter Snoopy: DE TODO UN POCO",
+    vendedor: "Cell Phone Snoopy: DE TODO UN POCO",
     
     proveedor: {
         email: "intelligere360@gmail.com",
@@ -87,21 +87,9 @@ const AppState = {
     imagenesPrecargadas: new Set(),
     // ✅ NUEVO: Configuración de la aplicación
     config: {
-        mostrar_precios: false,      // Controla si se muestran precios
-        version: "1.0.0",           // Versión de la configuración
-        idioma: "es",               // Idioma por defecto
-        contacto: {                 // Datos de contacto por defecto
-            telefono: "+584126597297",
-            whatsapp: "584126597297",
-            email: "ramonsimancas61@gmail.com",
-            vendedor: "Peter Snoopy: DE TODO UN POCO"
-        },
-        notificaciones: {           // Configuración de notificaciones
-            email_proveedor: "intelligere360@gmail.com",
-            service_id: "service_n6cbbge",
-            template_id: "template_qx7z8s9",
-            user_id: "hzEWYG4E0PQlhs2e_"
-        }
+        mostrar_precios: false, // Valor por defecto
+        version: "1.0.0",
+        idioma: "es"
     }
 };
 
@@ -110,78 +98,27 @@ const AppState = {
 // =============================================
 
 /**
- * Carga la configuración desde config.json local
- * (generado por GitHub Actions desde Google Drive)
+ * Carga la configuración desde config.json
  */
 async function cargarConfiguracion() {
     try {
-        console.log('⚙️ Cargando configuración desde JSON local...');
+        console.log('⚙️ Cargando configuración...');
         
-        // 1. Intentar cargar desde archivo local (generado por GitHub Actions)
-        const configUrl = getConfigJsonUrl(); // './data/config.json'
-        console.log('📁 URL de configuración:', configUrl);
+        // Intentar cargar desde Google Drive
+        const configData = await getJson(GOOGLE_DRIVE_CONFIG.CONFIG_JSON_ID);
         
-        const response = await fetch(configUrl, {
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        // Actualizar configuración
+        if (configData && configData.length > 0) {
+            AppState.config = { ...AppState.config, ...configData[0] };
+            console.log('✅ Configuración cargada:', AppState.config);
         }
         
-        const configData = await response.json();
-        console.log('✅ Configuración cargada del archivo:', configData);
-        
-        // 2. Procesar configuración
-        if (configData && typeof configData === 'object') {
-            // Si es un objeto directo (nuevo formato)
-            AppState.config = {
-                ...AppState.config, // Valores por defecto
-                ...configData       // Valores del archivo
-            };
-            
-            // Si tiene sección contacto, procesarla
-            if (configData.contacto) {
-                // Actualizar configContacto global si existe
-                if (typeof configContacto !== 'undefined') {
-                    Object.assign(configContacto, configData.contacto);
-                }
-            }
-            
-            console.log('✅ Configuración procesada:', AppState.config);
-        } 
-        // Si el archivo tiene formato array (formato antiguo de Google Drive)
-        else if (Array.isArray(configData) && configData.length > 0 && configData[0]) {
-            AppState.config = {
-                ...AppState.config,
-                ...configData[0]
-            };
-            console.log('✅ Configuración procesada (formato array):', AppState.config);
-        }
-        else {
-            console.warn('⚠️ Formato de configuración no reconocido, usando valores por defecto');
-        }
-        
-        // 3. Guardar en cache local para uso offline
+        // Guardar en cache local
         guardarConfigCache(AppState.config);
-        
-        return AppState.config;
         
     } catch (error) {
         console.warn('❌ Error cargando configuración, usando cache o valores por defecto:', error);
-        
-        // Intentar cargar desde cache local
-        const cacheSuccess = await cargarConfigDesdeCache();
-        
-        if (!cacheSuccess) {
-            console.log('🔄 Usando configuración por defecto');
-            // Valores por defecto ya están en AppState.config
-        }
-        
-        return AppState.config;
+        await cargarConfigDesdeCache();
     }
 }
 
@@ -192,13 +129,11 @@ function guardarConfigCache(config) {
     try {
         const cacheData = {
             config: config,
-            timestamp: Date.now(),
-            version: 'v2'
+            timestamp: Date.now()
         };
         localStorage.setItem('config_cache', JSON.stringify(cacheData));
-        console.log('💾 Configuración guardada en cache local');
     } catch (error) {
-        console.warn('⚠️ No se pudo guardar configuración en cache:', error);
+        console.warn('No se pudo guardar configuración en cache:', error);
     }
 }
 
@@ -208,26 +143,18 @@ function guardarConfigCache(config) {
 async function cargarConfigDesdeCache() {
     try {
         const cache = localStorage.getItem('config_cache');
-        
         if (cache) {
             const data = JSON.parse(cache);
-            
-            // Cache válido por 24 horas
-            const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
-            
-            if (Date.now() - data.timestamp < CACHE_DURATION) {
+            // Cache válido por 1 hora
+            if (Date.now() - data.timestamp < 60 * 60 * 1000) {
                 AppState.config = { ...AppState.config, ...data.config };
                 console.log('📂 Configuración cargada desde cache:', AppState.config);
                 return true;
-            } else {
-                console.log('🧹 Cache de configuración expirada');
-                localStorage.removeItem('config_cache');
             }
         }
     } catch (error) {
-        console.error('❌ Error cargando configuración desde cache:', error);
+        console.error('Error cargando configuración desde cache:', error);
     }
-    
     return false;
 }
 
@@ -245,14 +172,8 @@ function aplicarConfiguracionPrecios() {
     const mostrarPrecios = debeMostrarPrecios();
     console.log('💰 Configuración de precios:', mostrarPrecios ? 'MOSTRAR' : 'OCULTAR');
     
-    // Actualizar en elementos existentes
+    // Aplicar a elementos existentes
     actualizarVisibilidadPrecios();
-    
-    // Si no se muestran precios, actualizar mensaje de WhatsApp
-    if (!mostrarPrecios && typeof configContacto !== 'undefined') {
-        // El mensaje por defecto ya está configurado
-        console.log('📱 Mensaje de WhatsApp configurado para modo "consultar precio"');
-    }
 }
 
 // =============================================
@@ -1856,16 +1777,9 @@ function actualizarVisibilidadPrecios() {
     precioElements.forEach(element => {
         if (mostrarPrecios) {
             element.classList.remove('no-price');
-            // Si el precio real está en data attribute, restaurarlo
-            if (element.dataset.originalPrice) {
-                element.textContent = element.dataset.originalPrice;
-            }
+            // Aquí podrías restaurar el precio original si lo guardaste en un data attribute
         } else {
             element.classList.add('no-price');
-            // Guardar precio original en data attribute
-            if (!element.dataset.originalPrice) {
-                element.dataset.originalPrice = element.textContent;
-            }
             element.textContent = 'Consultar precio';
         }
     });
@@ -2144,7 +2058,6 @@ class PersistentImagePreloader {
         
         if (this.pendingUrls.size === 0) {
             console.log('✅ Todas las imágenes precargadas exitosamente');
-            mostrarNotificacion('✅ Todas las imágenes precargadas exitosamente', 'success');
         }
     }
 
@@ -2310,87 +2223,6 @@ class PersistentImagePreloader {
 const imagePreloader = new PersistentImagePreloader();
 
 /**
- * Precarga inteligente de imágenes
- */
-function iniciarPrecargaInteligente(productos) {
-    console.log('🚀 Iniciando precarga inteligente...');
-    
-    const todasImagenes = [];
-    
-    // Recolectar URLs únicas de imágenes
-    productos.forEach(producto => {
-        if (producto.imagenes && producto.imagenes.length > 0) {
-            producto.imagenes.forEach(img => {
-                if (img.url && !img.url.includes('placeholder')) {
-                    todasImagenes.push({
-                        url: img.url,
-                        productoId: producto.id,
-                        productoNombre: producto.nombre
-                    });
-                }
-            });
-        }
-    });
-    
-    console.log(`📸 ${todasImagenes.length} imágenes para precargar`);
-    
-    if (todasImagenes.length === 0) return;
-    
-    // Precargar con límite de concurrencia
-    const MAX_CONCURRENT = 3;
-    let currentIndex = 0;
-    
-    const precargarLote = () => {
-        const lote = todasImagenes.slice(currentIndex, currentIndex + MAX_CONCURRENT);
-        
-        lote.forEach(img => {
-            const imageEl = new Image();
-            imageEl.src = img.url;
-            imageEl.onload = () => {
-                console.log(`✅ Precargada: ${img.productoNombre.substring(0, 20)}...`);
-                
-                // Actualizar imagen si está visible con placeholder
-                actualizarImagenSiEsVisible(img.productoId, img.url);
-            };
-            imageEl.onerror = () => {
-                console.warn(`❌ Error precargando: ${img.url.substring(0, 50)}...`);
-            };
-        });
-        
-        currentIndex += MAX_CONCURRENT;
-        
-        // Continuar si hay más imágenes
-        if (currentIndex < todasImagenes.length) {
-            setTimeout(precargarLote, 1000);
-        } else {
-            console.log('🎉 Precarga completada');
-        }
-    };
-    
-    // Iniciar precarga
-    precargarLote();
-}
-
-/**
- * Actualiza imagen si está visible con placeholder
- */
-function actualizarImagenSiEsVisible(productoId, nuevaUrl) {
-    const productCards = document.querySelectorAll(`[data-product-id="${productoId}"]`);
-    
-    productCards.forEach(card => {
-        const img = card.querySelector('.product-image');
-        if (img && (img.src.includes('placeholder') || !img.complete)) {
-            img.src = nuevaUrl;
-            img.style.opacity = '0.8';
-            setTimeout(() => {
-                img.style.opacity = '1';
-                img.style.transition = 'opacity 0.3s ease';
-            }, 100);
-        }
-    });
-}
-
-/**
  * Función mejorada para cargar productos que inicia la precarga persistente
  */
 async function cargarProductosConPrecargaPersistente(forzarActualizacion = false) {
@@ -2402,53 +2234,13 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         // Cargar configuración
         await cargarConfiguracion();
         
-        // ✅ 1. CARGAR DESDE JSON LOCAL (generado por GitHub Actions)
-        const jsonUrl = getProductsJsonUrl();
-        console.log('📥 URL del JSON:', jsonUrl);
-        
-        const response = await fetch(jsonUrl, {
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        // Verificar estructura del JSON
-        if (!data.products || !Array.isArray(data.products)) {
-            throw new Error('Estructura de JSON inválida');
-        }
-        
-        // Mostrar metadata
-        if (data.metadata) {
-            console.log('📊 Metadata:', {
-                productos: data.metadata.totalProducts,
-                imagenes: data.metadata.totalImages,
-                actualizado: data.metadata.lastSyncedReadable
-            });
-        }
+        // 1. CARGAR JSON DE LOS PRODUCTOS PRIMERO
+        const productosData = await getJson(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID);
         
         // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
-        productos = data.products.map(producto => {
-            // Asegurar que las imágenes tengan URLs correctas
-            const imagenesProcesadas = (producto.imagenes || []).map(img => ({
-                ...img,
-                // Asegurar URL usando buildImageUrl
-                url: img.url || buildImageUrl(img.id)
-            }));
-            
-            // Determinar imagen principal
-            let imagenPrincipal = './images/placeholder.jpg';
-            if (imagenesProcesadas.length > 0) {
-                const principal = imagenesProcesadas.find(img => img.principal) || imagenesProcesadas[0];
-                imagenPrincipal = principal.url;
-            }
-            
+        productos = productosData.map(producto => {
+            const imagenesProcesadas = procesarImagenesDesdeJSON(producto);
+            const imagenPrincipal = obtenerImagenPrincipalDesdeJSON({ ...producto, imagenes: imagenesProcesadas });
             return {
                 ...producto,
                 imagenes: imagenesProcesadas,
@@ -2456,12 +2248,10 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
             };
         });
         
-        console.log(`✅ ${productos.length} productos procesados`);
-
         guardarCacheLocal(productos);
+        console.log(`✅ ${productos.length} productos procesados`);
         
-        
-        // 3. MOSTRAR EN UI LOS PRODUCTOS INMEDIATAMENTE
+        // 3. MOSTRAR PRODUCTOS INMEDIATAMENTE
         await mostrarProductosDesdeCache(productos);
         cargarCategorias();
         actualizarBadgesConsultas();
@@ -2469,9 +2259,8 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
 
         // 4. ✅ INICIAR PRECARGA PERSISTENTE EN SEGUNDO PLANO
         setTimeout(() => {
-            //imagePreloader.startPersistentPreloading(productos);
-            iniciarPrecargaInteligente(productos);
-        }, 1000); // Esperar 1 segundo después de mostrar la UI
+            imagePreloader.startPersistentPreloading(productos);
+        }, 500);
         
         // 5. OCULTAR LOADER
         ocultarLoaderRapido();
@@ -2479,15 +2268,6 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
         ocultarLoaderRapido();
-        
-        // Mostrar error al usuario
-        mostrarNotificacion(`Error cargando productos: ${error.message}`, 'error');
-        
-        // Intentar cargar desde cache
-        const cacheSuccess = await cargarDesdeCache();
-        
-        if (!cacheSuccess) {
-            mostrarError('No se pudieron cargar los productos. Intenta recargar la página.');
-        }
+        await cargarDesdeCache();
     }
 }
