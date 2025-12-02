@@ -362,7 +362,7 @@ function configurarComportamientoApp() {
             e.preventDefault();
         }
         lastTap = currentTime;
-    });
+    }, { passive: false });
 }
 
 // =============================================
@@ -1181,12 +1181,12 @@ function inicializarCarrusel(producto) {
                     e.preventDefault();
                     console.log('🖱️ Click en imagen para maximizar');
                     toggleMaximizedMode(newImg);
-                });
+                }, { passive: false });
                 
                 // Prevenir arrastre accidental
                 newImg.addEventListener('dragstart', (e) => {
                     e.preventDefault();
-                });
+                }, { passive: false });
             }
         });
     }
@@ -1503,7 +1503,7 @@ function inicializarCarrusel(producto) {
         carouselContainer.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
             stopAutoSlide();
-        });
+        }, { passive: true }); // ← AGREGAR ESTO
 
         carouselContainer.addEventListener('touchend', (e) => {
             const endX = e.changedTouches[0].clientX;
@@ -1517,7 +1517,7 @@ function inicializarCarrusel(producto) {
                 }
             }
             startAutoSlide();
-        });
+        }, { passive: true }); // ← AGREGAR ESTO
 
         // Pausar auto-desplazamiento cuando el mouse está sobre el carrusel
         carouselContainer.addEventListener('mouseenter', stopAutoSlide);
