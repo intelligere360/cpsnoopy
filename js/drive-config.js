@@ -1,123 +1,99 @@
-// drive-config.js - Para sistema dinámico
-
-const GOOGLE_DRIVE_CONFIG = {
-    // AQUÍ TU API KEY
-    //API_KEY : "...",
-
-    // ID de la carpeta donde tienes las imágenes
-    FOLDER_ID: '16YT-X9Bew6QejnQQY3SZH-Bjah5cJGlY', // ← Este es el ID del JSON, ajusta si es diferente
-
-    // ID del archivo JSON de productos
-    PRODUCTS_JSON_ID: '16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6',
-
-    // 🔗 URL del JSON principal
-    // https://drive.google.com/file/d/16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6/view?usp=drive_link
-    // https://drive.google.com/file/d/16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6/view?usp=sharing
-    productsJsonUrl: 'https://drive.google.com/uc?export=download&id=16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6',
+// drive-config.js - VERSIÓN SIMPLIFICADA CON JSON LOCAL
+const CONFIG = {
+    // Archivos locales generados por GitHub Actions
+    PRODUCTS_JSON_URL: './data/products.json',
+    APP_CONFIG_URL: './data/config.json',
     
-    // 🔗 NUEVO: URL del JSON de configuración 
-    CONFIG_JSON_ID: '1lE5srirGH7SQeAz6SqGj2GINB4r37peG',
-
-    // 🖼️ Nueva Base URL que SI funciona para embedding
-    baseImageUrl: 'https://drive.google.com/uc?export=view&id=', //'https://lh3.googleusercontent.com/d/',
-    
-    // ⚙️ Configuración
-    cacheDuration: 30 * 60 * 1000,
-    retryAttempts: 3
+    // Cache settings
+    CACHE_DURATION: 30 * 60 * 1000, // 30 minutos
+    VERSION: '2.1'
 };
 
 /**
- * Obtiene la API Key de forma segura
+ * Obtiene URL del JSON de productos
+ * Siempre usa el archivo local generado por GitHub Actions
  */
-function getApiKey() {
-    // 1. Intentar desde variable de entorno (si existe)
-    if (typeof process !== 'undefined' && process.env.GOOGLE_API_KEY) {
-        return process.env.GOOGLE_API_KEY;
-    }
-    
-    // 2. Intentar desde meta tag en HTML (más seguro)
-    const metaTag = document.querySelector('meta[name="google-api-key"]');
-    if (metaTag) {
-        return metaTag.getAttribute('content');
-    }
-    
-    // 3. Devolver clave pública de solo lectura (si configuraste una)
-    return null; // O una clave específica para solo lectura
+function getProductsJsonUrl() {
+    return CONFIG.PRODUCTS_JSON_URL;
 }
 
 /**
- * Genera URL para imagen usando Google Drive API
+ * Obtiene URL del JSON de configuración
+ */
+function getConfigJsonUrl() {
+    return CONFIG.APP_CONFIG_URL;
+}
+
+/**
+ * Construye URL para imágenes
+ * Usa Google Drive thumbnails públicos (no necesita API Key)
  */
 function buildImageUrl(fileId) {
-    if (!fileId || fileId === 'undefined') {
+    if (!fileId || fileId === 'undefined' || fileId.includes('undefined')) {
         return './images/placeholder.jpg';
     }
     
-    const cleanId = fileId.trim();
-    const apiKey = getApiKey();
+    // Limpiar ID
+    const cleanId = fileId.toString().trim();
     
-    // ✅ URL usando Google Drive API (más confiable)
-    return `https://www.googleapis.com/drive/v3/files/${cleanId}?alt=media&key=${apiKey}`;
+    // ✅ Google Drive Thumbnail - ACCESO PÚBLICO, SIN CORS ISSUES
+    // El parámetro 'sz' controla el tamaño: w100, w200, w400, w800, w1000, etc.
+    return `https://drive.google.com/thumbnail?id=${cleanId}&sz=w800&authuser=0`;
+    
+    // Nota: Esta URL funciona porque:
+    // 1. Las imágenes están en Google Drive compartidas como "Cualquier persona con el enlace"
+    // 2. Google genera thumbnails públicos automáticamente
+    // 3. No requiere API Key para thumbnails
 }
 
 /**
- * Obtiene el JSON de productos usando Google Drive API
+ * Obtiene la mejor URL funcionando (con fallback automático)
  */
-async function getProductsJson() {
-    try {
-        const fileId = GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID;
-        const apiKey = getApiKey();
+async function getBestImageUrl(fileId) {
+    if (!fileId) return './images/placeholder.jpg';
+    
+    const strategies = [
+        // Primera opción: Thumbnail tamaño 800
+        `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
         
-        // URL para descargar archivo
-        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+        // Segunda opción: Thumbnail tamaño 400 (más rápido)
+        `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`,
         
-        console.log('📥 Descargando JSON vía Google Drive API...');
-        const response = await fetch(url);
+        // Tercera opción: Viewer
+        `https://drive.google.com/uc?export=view&id=${fileId}`,
         
-        if (!response.ok) {
-            throw new Error(`Error API: ${response.status} ${response.statusText}`);
+        // Última opción: placeholder
+        './images/placeholder.jpg'
+    ];
+    
+    // Probar cada estrategia
+    for (const url of strategies) {
+        const works = await testUrl(url);
+        if (works) {
+            console.log(`✅ URL funcionando: ${url.includes('thumbnail') ? 'Thumbnail' : 'Viewer'}`);
+            return url;
         }
-        
-        return await response.json();
-        
-    } catch (error) {
-        console.error('❌ Error con Google Drive API:', error);
-        
-        // Fallback al método antiguo
-        console.log('🔄 Usando método alternativo...');
-        const fallbackUrl = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID}`;
-        const response = await fetch(fallbackUrl);
-        return await response.json();
     }
+    
+    return './images/placeholder.jpg';
 }
 
 /**
- * NUEVO: Obtiene la URL del JSON de configuración
+ * Testea si una URL es accesible
  */
-async function getConfigJson() {
-    try {
-        const fileId = GOOGLE_DRIVE_CONFIG.CONFIG_JSON_ID;
-        const apiKey = getApiKey();
-        
-        // URL para descargar archivo
-        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
-        
-        console.log('📥 Descargando JSON de Configuración vía Google Drive API...');
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`Error API: ${response.status} ${response.statusText}`);
-        }
-        
-        return await response.json();
-        
-    } catch (error) {
-        console.error('❌ Error con Google Drive API:', error);
-        
-        // Fallback al método antiguo
-        console.log('🔄 Usando método alternativo...');
-        const fallbackUrl = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_CONFIG.CONFIG_JSON_ID}`;
-        const response = await fetch(fallbackUrl);
-        return await response.json();
-    }
+async function testUrl(url) {
+    if (url.includes('placeholder')) return true;
+    
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+        setTimeout(() => resolve(false), 3000);
+    });
+}
+
+// Exportar funciones
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { getProductsJsonUrl, getConfigJsonUrl, buildImageUrl, getBestImageUrl };
 }

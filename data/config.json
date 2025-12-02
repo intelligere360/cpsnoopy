@@ -1,7 +1,13 @@
 [
     {
-        "version": "1.0.0",
         "mostrar_precios": false,
-        "idioma": "es"
+        "version": "1.0",
+        "idioma": "es",
+        "contacto": {
+            "telefono": "+584126597297",
+            "whatsapp": "584126597297",
+            "email": "ramonsimancas61@gmail.com",
+            "vendedor": "Peter Snoopy: DE TODO UN POCO"
+        }
     }
 ]
