@@ -26,15 +26,28 @@ async function getJson(fileId) {
         if (!response.ok) {
             throw new Error(`Error API: ${response.status} ${response.statusText}`);
         }
-        return await response.json();
+        const data = await response.json();
+        // Verificar que sea un JSON válido
+        if (!data) {
+            throw new Error('JSON vacío o inválido');
+        }
+        return data;
         
     } catch (error) {
         console.error('❌ Error con Google Drive API:', error);
         // Fallback al método antiguo
         console.log('🔄 Usando método alternativo...');
-        const fallbackUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-        const response = await fetch(fallbackUrl);
-        return await response.json();
+        try {
+            const fallbackUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+            const response = await fetch(fallbackUrl);
+            if (!response.ok) {
+                throw new Error(`Fallback failed: ${response.status}`);
+            }
+            return await response.json();
+        } catch (fallbackError) {
+            console.error('❌ Fallback también falló:', fallbackError);
+            throw fallbackError;
+        }
     }
 }
 

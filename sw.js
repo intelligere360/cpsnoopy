@@ -103,7 +103,7 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       } catch (error) {
         console.warn('🌐 Error de red, usando placeholder');
-        const placeholder = await caches.match('/images/placeholder.jpg');
+        const placeholder = await caches.match('./images/placeholder.jpg');
         return placeholder || new Response('Placeholder image not available', { status: 404 });
       }
     });

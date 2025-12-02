@@ -128,30 +128,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="js/drive-config.js"></script>
-    <script src="js/notifications-helper.js"></script>
-    <script src="js/app.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/notifications-helper.js"></script>
     <!-- SCRIPT PARA OCULTAR URL BAR EN ANDROID -->
     <script>
         // Prevenir que aparezca la URL bar en Android
         if ('standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches) {
             // La app está en modo standalone (PWA instalada)
             document.documentElement.style.setProperty('--sat', 'env(safe-area-inset-top)');
-        }
-        
-        // Prevenir comportamiento por defecto de navegación
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                window.scrollTo(0, 1);
-            }, 0);
-        });
-        
-        // Prevenir zoom con doble tap
+        }    
+        // Prevenir zoom con doble tap (mantener esto)
         document.addEventListener('touchstart', function(event) {
             if (event.touches.length > 1) {
                 event.preventDefault();
             }
         });
-        
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function(event) {
             const now = (new Date()).getTime();
@@ -170,6 +161,18 @@
                 navigator.serviceWorker.register('./sw.js')
                 .then(function(registration) {
                     console.log('✅ Service Worker registrado:', registration.scope);
+                    // Verificar si hay una nueva versión
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('🔄 Nueva versión del Service Worker encontrada');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('🔄 Nueva versión disponible. Recarga para actualizar.');
+                                // Aquí podrías mostrar un botón para recargar
+                            }
+                        });
+                    });
                 })
                 .catch(function(error) {
                     console.log('❌ Error registrando Service Worker:', error);

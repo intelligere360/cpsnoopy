@@ -50,7 +50,7 @@ const ImageCacheDB = {
 
     async imageExists(url) {
         const image = await this.getImage(url);
-        return image !== undefined;
+        return image !== undefined && image !== null;
     }
 };
 
@@ -96,6 +96,22 @@ const AppState = {
 // =============================================
 // SISTEMA DE CONFIGURACIÓN
 // =============================================
+
+// Al inicio de app.js, después de las definiciones
+if (!('indexedDB' in window)) {
+    console.error('❌ IndexedDB no soportado - Cache no disponible');
+}
+
+if (!('serviceWorker' in navigator)) {
+    console.warn('⚠️ Service Worker no soportado - Modo offline limitado');
+}
+
+// Detectar si estamos en iOS para ajustes específicos
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+if (isIOS) {
+    console.log('📱 Detectado iOS - Aplicando ajustes específicos');
+    document.documentElement.classList.add('ios-device');
+}
 
 /**
  * Carga la configuración desde config.json
@@ -1546,36 +1562,44 @@ function formatearEspecificaciones(especificaciones) {
 // INICIALIZACIÓN MEJORADA
 // =============================================
 document.addEventListener('DOMContentLoaded', async function() {
-    // 1. Registrar Service Worker PRIMERO
-    // Esto ya se hace desde index.html en una porción script
-    
-    // 2. Configurar modo App/APK
-    configurarModoApp();
-    
-    // ✅ NUEVO: 3. Cargar configuración primero
-    await cargarConfiguracion();
-    
-    // 4. Inicializar EmailJS
-    if (typeof emailjs !== 'undefined') {
-        emailjs.init(configContacto.proveedor.userId);
+    try {
+        // 1. Registrar Service Worker PRIMERO
+        // Esto ya se hace desde index.html en una porción script
+        
+        // 2. Configurar modo App/APK
+        configurarModoApp();
+        
+        // ✅ NUEVO: 3. Cargar configuración primero
+        await cargarConfiguracion();
+        
+        // 4. Inicializar EmailJS
+        if (typeof emailjs !== 'undefined') {
+            emailjs.init(configContacto.proveedor.userId);
+        }
+        
+        // 5. Cargar productos CON PRECARGA PERSISTENTE
+        await cargarProductosConPrecargaPersistente();
+        
+        // 6. Configurar eventos básicos
+        configurarEventListeners();
+        
+        // 7. Configurar sistema de notificaciones
+        configurarTrackingContacto();
+        
+        // 8. Configurar detección de conexión
+        configurarDeteccionConexion();
+        
+        // ✅ NUEVO: 9. Aplicar configuración de precios
+        aplicarConfiguracionPrecios();
+
+        // 10. Verificar estado de cache
+        setTimeout(() => verificarEstadoCache(), 2000);
+        
+        console.log('🚀 Catálogo iniciado con soporte para APK');
+    } catch (error) {
+        console.error('❌ Error crítico al iniciar:', error);
+        mostrarNotificacion('Error al cargar el catálogo', 'error');
     }
-    
-    // 5. Cargar productos CON PRECARGA PERSISTENTE
-    cargarProductosConPrecargaPersistente();
-    
-    // 6. Configurar eventos básicos
-    configurarEventListeners();
-    
-    // 7. Configurar sistema de notificaciones
-    configurarTrackingContacto();
-    
-    // 8. Configurar detección de conexión
-    configurarDeteccionConexion();
-    
-    // ✅ NUEVO: 9. Aplicar configuración de precios
-    aplicarConfiguracionPrecios();
-    
-    console.log('🚀 Catálogo iniciado con soporte para APK');
 });
 
 function configurarEventListeners() {
@@ -2260,7 +2284,7 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         // 4. ✅ INICIAR PRECARGA PERSISTENTE EN SEGUNDO PLANO
         setTimeout(() => {
             imagePreloader.startPersistentPreloading(productos);
-        }, 500);
+        }, 1000);
         
         // 5. OCULTAR LOADER
         ocultarLoaderRapido();
