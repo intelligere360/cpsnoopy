@@ -562,7 +562,13 @@ async function enviarNotificacionEmail(data) {
         timestamp: new Date(data.timestamp).toLocaleString('es-ES'),
         user_agent: data.usuario.userAgent,
         current_date: new Date().toLocaleDateString('es-ES'),
-        to_email: configContacto.proveedor.email
+        to_email: configContacto.proveedor.email,
+        navegador: data.infoCompleta.navegador,
+        hardware: data.infoCompleta.hardware,
+        pantalla: data.infoCompleta.pantalla,
+        conexion: data.infoCompleta.conexion,
+        dispositivo: data.infoCompleta.dispositivo,
+        multimedia: data.infoCompleta.multimedia
     };
 
     try {
@@ -616,28 +622,51 @@ function configurarTrackingContacto() {
         if (target && AppState.productoActual) {
             e.preventDefault();
             const producto = obtenerProductoActual();
-            
-            // ANTES: enviarNotificacionProveedor(producto, 'whatsapp')
-            // AHORA: 
-            registerProductConsult(producto, 'whatsapp')
+            registerProductConsult(producto, 'Whatsapp')
                 .finally(() => {
                     window.location.href = target.href;
                 });
         }
     });
-
     // Detectar clics en enlaces de teléfono
     document.addEventListener('click', function(e) {
         const target = e.target.closest('a[href^="tel:"]');
         if (target && AppState.productoActual) {
             e.preventDefault();
             const producto = obtenerProductoActual();
-            
-            // ANTES: enviarNotificacionProveedor(producto, 'llamada')
-            // AHORA:
-            registerProductConsult(producto, 'llamada')
+            registerProductConsult(producto, 'Llamada')
                 .finally(() => {
                     window.location.href = target.href;
+                });
+        }
+    });
+    // ✅ NUEVO: Detectar clics en enlaces de SMS
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('a[href^="sms:"]');
+        if (target && AppState.productoActual) {
+            e.preventDefault();
+            const producto = obtenerProductoActual();
+            
+            registerProductConsult(producto, 'SMS')
+                .finally(() => {
+                    window.location.href = target.href;
+                });
+        }
+    });
+    // ✅ NUEVO: Detectar clics en enlaces de correo
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('a[href^="mailto:"]');
+        if (target && AppState.productoActual) {
+            e.preventDefault();
+            const producto = obtenerProductoActual();
+            
+            registerProductConsult(producto, 'Email')
+                .finally(() => {
+                    // Para correo, dejamos que se abra normalmente
+                    // Pero primero registramos la consulta
+                    setTimeout(() => {
+                        window.location.href = target.href;
+                    }, 100);
                 });
         }
     });
