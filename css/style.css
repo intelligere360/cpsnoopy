@@ -1604,3 +1604,47 @@ input, textarea {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
+
+/* ============================================= */
+/* ESTILOS PARA EL BOTÓN INTELIGENTE SMS/CORREO */
+/* ============================================= */
+
+.contact-intelligent-btn {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(155, 89, 182, 0.2);
+}
+
+.contact-intelligent-btn:hover {
+    background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(155, 89, 182, 0.3);
+}
+
+.contact-intelligent-btn:active {
+    transform: translateY(0);
+}
+
+/* Variante para modo correo */
+.contact-intelligent-btn.email-mode {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
+}
+
+.contact-intelligent-btn.email-mode:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
+}

@@ -112,7 +112,6 @@ if (isIOS) {
     console.log('📱 Detectado iOS - Aplicando ajustes específicos');
     document.documentElement.classList.add('ios-device');
 }
-
 /**
  * Carga la configuración desde config.json
  */
@@ -137,7 +136,6 @@ async function cargarConfiguracion() {
         await cargarConfigDesdeCache();
     }
 }
-
 /**
  * Guarda la configuración en cache local
  */
@@ -152,7 +150,6 @@ function guardarConfigCache(config) {
         console.warn('No se pudo guardar configuración en cache:', error);
     }
 }
-
 /**
  * Carga la configuración desde cache local
  */
@@ -173,14 +170,12 @@ async function cargarConfigDesdeCache() {
     }
     return false;
 }
-
 /**
  * Verifica si se deben mostrar precios
  */
 function debeMostrarPrecios() {
     return AppState.config.mostrar_precios === true;
 }
-
 /**
  * Aplica la configuración de precios a la UI
  */
@@ -191,11 +186,9 @@ function aplicarConfiguracionPrecios() {
     // Aplicar a elementos existentes
     actualizarVisibilidadPrecios();
 }
-
 // =============================================
 // DETECCIÓN Y CONFIGURACIÓN PARA MODO APP/APK
 // =============================================
-
 function configurarModoApp() {
     // Detectar si estamos en modo standalone (PWA instalada)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
@@ -247,7 +240,6 @@ function configurarSalidaApp() {
 // =============================================
 // CONFIGURACIÓN FULLSCREEN MEJORADA PARA TWA
 // =============================================
-
 function configurarFullscreenApp() {
     console.log('📱 Configurando fullscreen mejorado para TWA');
     
@@ -319,7 +311,7 @@ function limpiarInterfazNavegador() {
     if (document.title.includes('github.io') || 
         document.title.includes('http') ||
         document.title.includes('://')) {
-        document.title = 'Cell Phone Snoopy - Catálogo';
+        document.title = 'Peter Snoopy - Catálogo Portátil';
     }
     
     // Buscar y limpiar elementos que puedan contener la URL
@@ -352,7 +344,6 @@ function configurarComportamientoApp() {
             e.preventDefault();
         }
     });
-    
     // Prevenir zoom con doble tap
     let lastTap = 0;
     document.addEventListener('touchend', function(e) {
@@ -481,7 +472,6 @@ async function limpiarCacheAntigua() {
 // =============================================
 // SISTEMA DE NOTIFICACIONES AL PROVEEDOR
 // =============================================
-
 async function enviarNotificacionProveedor(notificationData) {
 
     async function registrarConsultaEnExcel(notificationData) {   
@@ -724,7 +714,6 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
         imagePreloader.actualizarImagenesVisibles();
     }, 1000);
 }
-
 /**
  * Muestra esqueletos de carga mientras se obtienen los productos
  */
@@ -745,7 +734,6 @@ function mostrarEsqueletosCarga() {
         </div>
     `).join('');
 }
-
 /**
  * Procesa las imágenes que vienen en el JSON
  */
@@ -770,7 +758,6 @@ function procesarImagenesDesdeJSON(producto) {
         orden: 1
     }];
 }
-
 /**
  * Obtiene la imagen principal desde el JSON
  */
@@ -787,7 +774,6 @@ function obtenerImagenPrincipalDesdeJSON(producto) {
     
     return './images/placeholder.jpg';
 }
-
 // =============================================
 // SISTEMA DE CACHE
 // =============================================
@@ -841,7 +827,6 @@ function formatearPrecio(min, max) {
 // =============================================
 // FUNCIONES DE DETALLES DE PRODUCTO CON CACHE
 // =============================================
-
 async function mostrarDetallesProducto(productoId) {
     const producto = productos.find(p => p.id === productoId);
     if (!producto) return;
@@ -856,7 +841,7 @@ async function mostrarDetallesProducto(productoId) {
     const mostrarPrecios = debeMostrarPrecios();
     const precioHTML = mostrarPrecios 
         ? `<div class="product-price">${formatearPrecio(producto.precioMin, producto.precioMax)}</div>`
-        : `` //<div class="product-price no-price">Consultar precio</div>`;
+        : `<div class="product-price no-price">Consulta el precio</div>`;
     
     // ✅ NUEVO: Badge "NUEVO" para el modal
     const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Como Nuevo!</div>` : '';
@@ -888,11 +873,96 @@ async function mostrarDetallesProducto(productoId) {
     
     // Actualizar enlaces de contacto
     const str_precio_saber = AppState.config.mostrar_precios ? formatearPrecio(producto.precioMin, producto.precioMax) : `¿Cuándo y dónde lo puedo ver?`;
+    
+    // Mensaje para WhatsApp
     const mensaje = `Hola, me interesa: ${producto.nombre} - ${str_precio_saber}`;
     const urlWhatsapp = `https://wa.me/${configContacto.whatsapp}?text=${encodeURIComponent(mensaje)}`;
     document.getElementById('whatsappModal').href = urlWhatsapp;
     
+    // ✅ NUEVO: Configurar botón inteligente SMS/Correo
+    configurarBotonInteligente(producto, str_precio_saber);
+
     document.getElementById('productModal').style.display = 'block';
+}
+// ✅ FUNCIÓN MEJORADA: Configurar botón inteligente SMS/Correo
+function configurarBotonInteligente(producto, str_precio_saber) {
+    const btn = document.getElementById('contactIntelligentBtn');
+    const icon = document.getElementById('contactIcon');
+    const text = document.getElementById('contactText');
+    
+    // Mensaje común para ambos modos
+    const mensaje = `Consulta sobre producto Peter Snoopy: ${producto.nombre} - ${str_precio_saber}`;
+    const asuntoCorreo = `Consulta: ${producto.nombre}`;
+    
+    // Detectar mejor si es dispositivo móvil
+    const esMovil = detectarDispositivoMovil();
+    
+    // Obtener configuraciones con valores por defecto
+    const telefono = configContacto.telefono || '+584126597297';
+    const email = configContacto.email || 'ramonsimancas61@gmail.com';
+    
+    if (esMovil) {
+        // MODO SMS para móviles
+        const urlSMS = `sms:${telefono}?body=${encodeURIComponent(mensaje)}`;
+        btn.href = urlSMS;
+        icon.textContent = '💭';
+        text.textContent = 'Enviar SMS';
+        btn.classList.remove('email-mode');
+        btn.title = 'Abre la app de mensajes para enviar SMS';
+        
+        console.log(`📱 Modo SMS activado: ${telefono}`);
+    } else {
+        // MODO CORREO para escritorio
+        const urlCorreo = `mailto:${email}?subject=${encodeURIComponent(asuntoCorreo)}&body=${encodeURIComponent(mensaje)}`;
+        btn.href = urlCorreo;
+        icon.textContent = '✉️';
+        text.textContent = 'Enviar Correo';
+        btn.classList.add('email-mode');
+        btn.title = `Abre tu cliente de correo para contactar a ${email}`;
+        
+        // Manejo alternativo si no hay cliente de correo
+        btn.onclick = function(e) {
+            // Intenta abrir el cliente de correo
+            // Si falla, ofrecer copiar el correo al portapapeles
+            try {
+                // Dejar que el navegador maneje el mailto
+                return true;
+            } catch (error) {
+                e.preventDefault();
+                // Opción alternativa: copiar correo al portapapeles
+                navigator.clipboard.writeText(email)
+                    .then(() => {
+                        alert(`Correo copiado: ${email}\nPega en tu cliente de correo preferido.`);
+                    })
+                    .catch(() => {
+                        alert(`Para contactar, envía un correo a: ${email}\nAsunto: ${asuntoCorreo}`);
+                    });
+                return false;
+            }
+        };
+        
+        console.log(`💻 Modo Correo activado: ${email}`);
+    }
+    
+    // Asegurar que el botón abra en nueva ventana solo para escritorio
+    if (!esMovil) {
+        btn.target = '_blank';
+    } else {
+        btn.removeAttribute('target');
+    }
+}
+// ✅ FUNCIÓN AUXILIAR: Detectar dispositivo móvil
+function detectarDispositivoMovil() {
+    // Detección por User Agent
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const esPorUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    // Detección por tamaño de pantalla y capacidades táctiles
+    const esPorPantalla = window.innerWidth <= 768;
+    const tieneTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    
+    // Combinar criterios para mayor precisión
+    return (esPorUserAgent && esPorPantalla) || (tieneTouch && esPorPantalla);
 }
 /**
  * Crea el carrusel usando imágenes desde la cache de IndexedDB
@@ -1865,7 +1935,6 @@ async function enviarConsultaAExcel(consultaData) {
         guardarEnColaExcel(consultaData);
     }
 }
-
 /**
  * Envía datos a Google Apps Script para escribir en Excel
  */
@@ -1894,7 +1963,6 @@ async function enviarViaGoogleAppsScript(excelData) {
         return true;
     }
 }
-
 /**
  * Guarda consulta localmente para procesar después
  */
@@ -1915,7 +1983,6 @@ function guardarConsultaLocal(excelData) {
         console.error('❌ Error guardando consulta local:', error);
     }
 }
-
 /**
  * Guarda en cola para reintentos
  */
@@ -1936,7 +2003,6 @@ function guardarEnColaExcel(consultaData) {
         console.error('❌ Error guardando en cola Excel:', error);
     }
 }
-
 /**
  * Procesa consultas pendientes para Excel cuando hay conexión
  */
@@ -1967,7 +2033,6 @@ async function procesarColaExcel() {
     
     localStorage.setItem('cola_excel_pendientes', JSON.stringify(pendientes));
 }
-
 /**
  * Procesa consultas locales guardadas
  */
@@ -1998,9 +2063,6 @@ async function procesarConsultasLocales() {
 // SISTEMA DE PRECARGA PERSISTENTE DE IMÁGENES
 // =============================================
 
-/**
- * Sistema de precarga persistente que intenta descargar imágenes continuamente
- */
 /**
  * Envía URLs al Service Worker para precache agresivo
  */
@@ -2242,7 +2304,6 @@ class PersistentImagePreloader {
         }
     }
 }
-
 // Instancia global del preloader
 const imagePreloader = new PersistentImagePreloader();
 
@@ -2254,9 +2315,6 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         console.log('📦 Iniciando carga de productos con precarga persistente...');
         mostrarLoaderRapido();
         mostrarEsqueletosCarga();
-        
-        // Cargar configuración
-        await cargarConfiguracion();
         
         // 1. CARGAR JSON DE LOS PRODUCTOS PRIMERO
         const productosData = await getJson(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID);
