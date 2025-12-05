@@ -1873,7 +1873,7 @@ async function verificarEstadoCache() {
     const keys = await cache.keys();
     const imagenesEnCache = keys.filter(key => 
       key.url.includes('/uc?export=view') || 
-      key.url.includes('googleusercontent.com')
+      key.url.includes('googleapis.com')
     );
     
     console.log(`📊 Cache: ${imagenesEnCache.length} imágenes almacenadas`);

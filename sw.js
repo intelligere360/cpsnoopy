@@ -79,8 +79,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
   // Estrategia para imágenes
-  if (url.pathname.includes('/uc?export=view') || 
-      url.href.includes('googleusercontent.com') ||
+  if ((url.href.includes('googleapis.com') && url.href.includes('alt=media&')) ||
       url.pathname.endsWith('.jpg') || 
       url.pathname.endsWith('.png') ||
       url.pathname.endsWith('.jpeg')) {
@@ -110,7 +109,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Estrategia para JSON (siempre red primero)
-  else if (url.pathname.includes('/uc?export=download') || url.pathname.endsWith('.json')) {
+  else if (url.pathname.includes('googleapis.com') || url.pathname.endsWith('.json')) {
     handleFetchWithFallback(event, async (event) => {
       try {
         const networkResponse = await fetch(event.request);
