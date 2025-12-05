@@ -447,22 +447,23 @@ const internacionalInfo = {
 /************************************************/
 
 async function obtenerTodaInfoDispositivo() {
-  try {
-    const infoCompleta = {
-      timestamp: new Date().toISOString(),
-      navegador: browserInfo,
-      hardware: hardwareInfo,
-      pantalla: pantallaInfo,
-      conexion: conexionInfo,
-      dispositivo: dispositivoInfo,
-      multimedia: multimediaInfo,
-      rendimiento: rendimientoInfo,
-      internacional: internacionalInfo,
-    };
-    
-    return infoCompleta;
-  } catch (error) {
-    console.error('Error obteniendo info:', error);
-    return null;
-  }
+
+    try {
+        const infoCompleta = {
+        timestamp: new Date().toISOString(),
+        navegador: browserInfo,
+        hardware: hardwareInfo,
+        pantalla: pantallaInfo,
+        conexion: conexionInfo,
+        dispositivo: dispositivoInfo,
+        multimedia: multimediaInfo,
+        rendimiento: rendimientoInfo,
+        internacional: internacionalInfo,
+        };
+        
+        return infoCompleta;
+    } catch (error) {
+        console.error('Error obteniendo info:', error);
+        return null;
+    }
 }

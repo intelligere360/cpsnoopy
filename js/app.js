@@ -823,14 +823,12 @@ async function cargarDesdeCache() {
         const cache = localStorage.getItem('catalogo_cache');
         if (cache) {
             const data = JSON.parse(cache);
-            // Cache válido por 1 hora
-            if (Date.now() - data.timestamp < 60 * 60 * 1000) {
-                productos = data.productos;
-                console.log('📂 Productos cargados desde cache');
-                mostrarProductosDesdeCache(productos);
-                cargarCategorias();
-                return true;
-            }
+            productos = data.productos;
+            console.log('📂 Productos cargados desde cache');
+            mostrarProductosDesdeCache(productos);
+            cargarCategorias();
+            return true;
+            
         }
     } catch (error) {
         console.error('Error cargando cache:', error);
