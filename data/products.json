@@ -574,5 +574,59 @@
             }
         ],
         "vendido": false
+    },
+    {
+        "id": 22,
+        "nombre": "Lavabo con pedestal",
+        "categoria": "Hogar",
+        "precioMin": 20.00,
+        "precioMax": 20.00,
+        "descripcion": "Lavabo con pedestal marca Corona de color melocotón o rosa vieja.",
+        "especificaciones": "; Sin válvulas o grifo; El lavabo tiene un único orificio pretaladrado para el grifo; Este estilo de conjunto de lavabo y pedestal es una opción popular para diversos diseños de baños, especialmente en espacios más pequeños",
+        "nuevo": true,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1c47EcGmAz1PmjWNYChZntM1zNhtbpvKX",
+                "nombre": "22_1.jpg",
+                "principal": true,
+                "orden": 1
+            },
+            {
+                "id": "11LOrc3lHhN1ygsaVkEFUXnwyZarWY-YO",
+                "nombre": "22_2.jpg",
+                "principal": false,
+                "orden": 2
+            }
+        ],
+        "vendido": false
+    },
+    {
+        "id": 23,
+        "nombre": "Cortadora de cerámica",
+        "categoria": "Herramientas",
+        "precioMin": 30.00,
+        "precioMax": 30.00,
+        "descripcion": "Corta Cerámica de 85 ctms de largo de color rojo.",
+        "especificaciones": ";  Máquina de accionamiento manual utilizada para el corte de baldosas cerámicas y porcelánicas; Cuenta con carriles guía, un carro para la rueda de corte y la plantilla de rotura, y una base para la baldosa; Estas cortadoras manuales son portátiles, no requieren una fuente de energía y son adecuadas tanto para uso doméstico como profesional",
+        "nuevo": true,
+        "imageCount": 2,
+        "activo": true,
+        "imagenes": [
+            {
+                "id": "1rGu9lWDp97HGqEmn6O5KtjsducaR1Ocu",
+                "nombre": "23_1.jpg",
+                "principal": true,
+                "orden": 1
+            },
+            {
+                "id": "11G-1IRTIrIRyWuZBNR0yPJgNvAD5icUk",
+                "nombre": "23_2.jpg",
+                "principal": false,
+                "orden": 2
+            }
+        ],
+        "vendido": false
     }
 ]

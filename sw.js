@@ -78,8 +78,31 @@ function handleFetchWithFallback(event, cacheStrategy) {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // Estrategia para imágenes
-  if ((url.href.includes('googleapis.com') && url.href.includes('alt=media&')) ||
+  // Estrategia para JSON (siempre red primero)
+  if (url.pathname.includes(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID) || 
+      url.pathname.endsWith('.json') ||
+      url.pathname.includes(GOOGLE_DRIVE_CONFIG.CONFIG_JSON_ID)) {
+    handleFetchWithFallback(event, async (event) => {
+      try {
+        const networkResponse = await fetch(event.request);
+        if (networkResponse.status === 200 && isCacheableRequest(event.request)) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      } catch (error) {
+        const cachedResponse = await caches.match(event.request);
+        return cachedResponse || new Response('{}', {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    });
+  }
+  // Estrategia para imágenes 
+  else if (url.href.includes('googleapis.com') || url.href.includes('uc?export=download') ||
       url.pathname.endsWith('.jpg') || 
       url.pathname.endsWith('.png') ||
       url.pathname.endsWith('.jpeg')) {
@@ -104,28 +127,6 @@ self.addEventListener('fetch', (event) => {
         console.warn('🌐 Error de red, usando placeholder');
         const placeholder = await caches.match('./images/placeholder.jpg');
         return placeholder || new Response('Placeholder image not available', { status: 404 });
-      }
-    });
-  }
-
-  // Estrategia para JSON (siempre red primero)
-  else if (url.pathname.includes('googleapis.com') || url.pathname.endsWith('.json')) {
-    handleFetchWithFallback(event, async (event) => {
-      try {
-        const networkResponse = await fetch(event.request);
-        if (networkResponse.status === 200 && isCacheableRequest(event.request)) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      } catch (error) {
-        const cachedResponse = await caches.match(event.request);
-        return cachedResponse || new Response('{}', {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        });
       }
     });
   }

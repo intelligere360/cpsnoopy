@@ -20,7 +20,7 @@ async function getJson(fileId) {
     try {
         const apiKey = GOOGLE_DRIVE_CONFIG.API_KEY;
         // URL para descargar archivo
-        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?key=${apiKey}`; //alt=media&
+        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
         console.log('📥 Descargando JSON vía Google Drive API...');
         const response = await fetch(url);
         if (!response.ok) {
