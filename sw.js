@@ -18,6 +18,11 @@ const STATIC_FILES = [
   './images/placeholder.jpg'
 ];
 
+// ID del archivo JSON de productos
+const PRODUCTS_JSON_ID = '16dIrjnuDWYU6HbF8-4UVOnWT-X3HS8b6';
+// ID del archivo JSON de configuracion
+const CONFIG_JSON_ID = '1lE5srirGH7SQeAz6SqGj2GINB4r37peG';
+
 // Instalación - Cache de archivos estáticos
 self.addEventListener('install', (event) => {
   console.log('🛠️ Service Worker instalando...');
@@ -79,9 +84,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
   // Estrategia para JSON (siempre red primero)
-  if (url.pathname.includes(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID) || 
+  if (url.pathname.includes(PRODUCTS_JSON_ID) || 
       url.pathname.endsWith('.json') ||
-      url.pathname.includes(GOOGLE_DRIVE_CONFIG.CONFIG_JSON_ID)) {
+      url.pathname.includes(CONFIG_JSON_ID)) {
     handleFetchWithFallback(event, async (event) => {
       try {
         const networkResponse = await fetch(event.request);
