@@ -1658,39 +1658,10 @@ function formatearEspecificaciones(especificaciones) {
 // =============================================
 // INICIALIZACIÓN MEJORADA
 // =============================================
-
-function RegisterServiceWorker() {
-    // En index.html - registro del Service Worker
-    if ('serviceWorker' in navigator) {
-		window.addEventListener('load', function() {
-			// ✅ SW AUTOCONTENIDO - NO DEPENDE DE VARIABLES EXTERNAS
-			navigator.serviceWorker.register('./sw.js')
-			.then(function(registration) {
-				console.log('✅ Service Worker registrado:', registration.scope);
-				// Verificar si hay una nueva versión
-				registration.addEventListener('updatefound', () => {
-					const newWorker = registration.installing;
-					console.log('🔄 Nueva versión del Service Worker encontrada');
-					
-					newWorker.addEventListener('statechange', () => {
-						if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-							console.log('🔄 Nueva versión disponible. Recarga para actualizar.');
-							// Aquí podrías mostrar un botón para recargar
-						}
-					});
-				});
-			})
-			.catch(function(error) {
-				console.log('❌ Error registrando Service Worker:', error);
-			});
-		});
-	}
-}
-
 document.addEventListener('DOMContentLoaded', async function() {
     try {
         // 1. Registrar Service Worker PRIMERO
-        RegisterServiceWorker();
+        // esta en index.html
         
         // 2. Configurar modo App/APK
         configurarModoApp();
