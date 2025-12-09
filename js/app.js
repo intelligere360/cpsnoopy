@@ -1679,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         // 1. Registrar Service Worker PRIMERO
         // esta en index.html
-        
+        await obtenerTodaInfoDispositivo();       
         // 2. Configurar modo App/APK
         configurarModoApp();
         

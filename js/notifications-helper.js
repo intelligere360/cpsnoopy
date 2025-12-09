@@ -1,11 +1,7 @@
 // notifications-helper.js - Para catálogo público
 // FUNCIONES QUE SÍ SE USAN:
 
-/**
- * Registra consulta cuando usuario hace clic en WhatsApp/Llamar
- * SE LLAMA EN: configurarTrackingContacto() en app.js
- */
-const infoCompleta = await obtenerTodaInfoDispositivo(); // Se invoca una sola vez
+globalThis.infoCompleta = null;
 
 async function registerProductConsult(producto, tipoContacto) {
     const usuario = obtenerDatosUsuario();    
@@ -20,7 +16,7 @@ async function registerProductConsult(producto, tipoContacto) {
             precioMax: producto.precioMax,
             categoria: producto.categoria
         },
-        infoCompleta: infoCompleta
+        infoCompleta: globalThis.infoCompleta
     };
 
     try {
@@ -399,8 +395,9 @@ const getMultimediaDetallada = async () => {
 /************************************************/
 
 async function obtenerTodaInfoDispositivo() {
+    let infoCompleta;
     try {
-        const infoCompleta = {
+        infoCompleta = {
             timestamp: new Date().toISOString(),
             navegador: infoDetallada(userAgent),
             hardware: 'RAM:' + hardwareInfo.memoria.toString() + ' GB',
@@ -409,10 +406,17 @@ async function obtenerTodaInfoDispositivo() {
             dispositivo: getInfoDispositivoCompleta(),
             multimedia: await getMultimediaDetallada()
         };
-        
-        return infoCompleta;
     } catch (error) {
         console.error('Error obteniendo info:', error);
-        return null;
+        infoCompleta = {
+            timestamp: new Date().toISOString(),
+            navegador: '-',
+            hardware: '-',
+            pantalla: '-',
+            conexion: '-',
+            dispositivo: '-',
+            multimedia: '-'
+        };
     }
+    globalThis.infoCompleta = infoCompleta;
 }
