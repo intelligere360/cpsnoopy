@@ -919,10 +919,10 @@ function configurarBotonesContacto(producto, str_precio_saber) {
     const asuntoCorreo = `Consulta: ${producto.nombre}`;
     
     // Configurar cada botón
-    configurarBotonLlamada(producto, str_precio_saber);
-    configurarBotonWhatsApp(producto, str_precio_saber);
-    configurarBotonSMS(producto, str_precio_saber);
-    configurarBotonCorreo(producto, str_precio_saber);
+    configurarBotonLlamada(producto);
+    configurarBotonWhatsApp(producto, mensaje);
+    configurarBotonSMS(producto, mensaje);
+    configurarBotonCorreo(producto, mensaje, asuntoCorreo);
     
     // Si es dispositivo móvil/tablet, aplicar layout 2x2
     if (esDispositivoMovil) {
@@ -931,7 +931,7 @@ function configurarBotonesContacto(producto, str_precio_saber) {
 }
 
 // Configurar botón de llamada
-function configurarBotonLlamada(producto, str_precio_saber) {
+function configurarBotonLlamada(producto) {
     const telefono = configContacto.telefono || '+584126597297';
     const btn = document.getElementById('btnLlamada');
     
@@ -951,9 +951,8 @@ function configurarBotonLlamada(producto, str_precio_saber) {
 }
 
 // Configurar botón de WhatsApp
-function configurarBotonWhatsApp(producto, str_precio_saber) {
+function configurarBotonWhatsApp(producto, mensaje) {
     const whatsapp = configContacto.whatsapp || '584126597297';
-    const mensaje = `Hola, me interesa: ${producto.nombre} - ${str_precio_saber}`;
     const urlWhatsapp = `https://wa.me/${whatsapp}?text=${encodeURIComponent(mensaje)}`;
     const btn = document.getElementById('whatsappModal');
     
@@ -973,9 +972,8 @@ function configurarBotonWhatsApp(producto, str_precio_saber) {
 }
 
 // Configurar botón de SMS
-function configurarBotonSMS(producto, str_precio_saber) {
+function configurarBotonSMS(producto, mensaje) {
     const telefono = configContacto.telefono || '+584126597297';
-    const mensaje = `Consulta sobre producto Peter Snoopy: ${producto.nombre} - ${str_precio_saber}`;
     const urlSMS = `sms:${telefono}?body=${encodeURIComponent(mensaje)}`;
     const btn = document.getElementById('btnSMS');
     
@@ -995,10 +993,8 @@ function configurarBotonSMS(producto, str_precio_saber) {
 }
 
 // Configurar botón de Correo
-function configurarBotonCorreo(producto, str_precio_saber) {
+function configurarBotonCorreo(producto, mensaje, asuntoCorreo) {
     const email = configContacto.email || 'ramonsimancas61@gmail.com';
-    const mensaje = `Consulta sobre producto Peter Snoopy: ${producto.nombre} - ${str_precio_saber}`;
-    const asuntoCorreo = `Consulta: ${producto.nombre}`;
     const urlCorreo = `mailto:${email}?subject=${encodeURIComponent(asuntoCorreo)}&body=${encodeURIComponent(mensaje)}`;
     const btn = document.getElementById('btnCorreo');
     
@@ -1755,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         configurarEventListeners();
         
         // 7. Configurar sistema de notificaciones
-        configurarTrackingContacto();
+        //configurarTrackingContacto();
         
         // 8. Configurar detección de conexión
         configurarDeteccionConexion();
