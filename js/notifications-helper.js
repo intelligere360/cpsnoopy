@@ -163,23 +163,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Navegador y versión
 const userAgent = navigator.userAgent;
-const browserInfo = {
-  // Detección de navegador
-  esChrome: /Chrome/.test(userAgent) && !/Edg|OPR/.test(userAgent),
-  esFirefox: /Firefox/.test(userAgent),
-  esSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent),
-  esEdge: /Edg/.test(userAgent),
-  esOpera: /OPR/.test(userAgent),
+const infoDetallada = (userAgent) => {
+  const b = {
+    esChrome: /Chrome/.test(userAgent) && !/Edg|OPR/.test(userAgent),
+    esFirefox: /Firefox/.test(userAgent),
+    esSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent),
+    esEdge: /Edg/.test(userAgent),
+    esOpera: /OPR/.test(userAgent),
+    version: (userAgent.match(/(Chrome|Firefox|Safari|Edg|OPR)\/([\d.]+)/) || [])[2]
+  };
   
-  // Versiones específicas
-  version: (userAgent.match(/(Chrome|Firefox|Safari|Edg|OPR)\/([\d.]+)/) || [])[2],
+  const navegador = Object.entries(b).slice(0,5).find(([_,v]) => v)?.[0]?.replace('es','') || 'Desconocido';
   
-  // Motor de renderizado
-  motor: {
-    esBlink: 'chrome' in window, // Chrome, Edge, Opera
-    esGecko: 'InstallTrigger' in window, // Firefox
-    esWebKit: 'ApplePayError' in window // Safari
-  }
+  return `${navegador}${b.version ? ` ${b.version}` : ''}`;
 };
 
 /* HARDWARE Y CAPACIDADES */
@@ -210,33 +206,41 @@ const hardwareInfo = {
 
 /* Pantalla y Resolución  */
 
-const pantallaInfo = {
-  // Resolución real
-  resolucion: {
-    ancho: screen.width,
-    alto: screen.height,
-    profundidadColor: screen.colorDepth, // bits
-    densidadPixel: window.devicePixelRatio || 1
-  },
+const infoPantallaDetallada = () => {
+  const pantallaInfo = {
+    resolucion: {
+      ancho: screen.width,
+      alto: screen.height,
+      profundidadColor: screen.colorDepth,
+      densidadPixel: window.devicePixelRatio || 1
+    },
+    viewport: {
+      ancho: window.innerWidth,
+      alto: window.innerHeight,
+      orientacion: screen.orientation ? screen.orientation.type : 
+                   window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+    },
+    esMultiPantalla: window.screen.isExtended || false,
+    tamañoFisico: {
+      esHD: window.innerWidth >= 1280,
+      es4K: window.innerWidth >= 3840
+    }
+  };
+
+  const r = pantallaInfo.resolucion;
+  const v = pantallaInfo.viewport;
+  const t = pantallaInfo.tamañoFisico;
+
+  // Calcular resolución real considerando densidad de píxeles
+  const resolucionReal = `${Math.round(r.ancho * r.densidadPixel)}×${Math.round(r.alto * r.densidadPixel)}`;
   
-  // Área visible (viewport)
-  viewport: {
-    ancho: window.innerWidth,
-    alto: window.innerHeight,
-    // Orientación
-    orientacion: screen.orientation ? screen.orientation.type : 
-                 window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
-  },
+  // Determinar calidad de pantalla
+  const calidad = t.es4K ? '4K' : t.esHD ? 'Full HD' : 'SD';
   
-  // Múltiples pantallas
-  esMultiPantalla: window.screen.isExtended || false,
-  
-  // Tamaño de pantalla física (estimado)
-  tamañoFisico: {
-    pulgadas: calcularPulgadasPantalla(), // Función estimada
-    esHD: window.innerWidth >= 1280,
-    es4K: window.innerWidth >= 3840
-  }
+  // Icono de orientación
+  const iconoOrientacion = v.orientacion.includes('landscape') ? '↔' : '↕';
+
+  return `📱 Pantalla: ${r.ancho}×${r.alto} (${resolucionReal} real) | Viewport: ${v.ancho}×${v.alto} ${iconoOrientacion} | Densidad: ${r.densidadPixel}x | Color: ${r.profundidadColor} bits | Calidad: ${calidad}${pantallaInfo.esMultiPantalla ? ' | 🖥️ Múltiples' : ''}`;
 };
 
 function calcularPulgadasPantalla() {
@@ -249,22 +253,50 @@ function calcularPulgadasPantalla() {
 }
 
 /*  Conectividad y Red  */
+const infoConexionCompleta = async () => {
+  const obtenerUbicacion = () => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          precision: pos.coords.accuracy
+        }),
+        () => resolve(null),
+        { timeout: 3000 }
+      );
+    });
+  };
 
-const conexionInfo = {
-  // Tipo de conexión
-  tipoConexion: navigator.connection ? {
-    tipo: navigator.connection.effectiveType, // '4g', '3g', '2g', 'slow-2g'
-    velocidadDownlink: navigator.connection.downlink, // Mbps
-    rtt: navigator.connection.rtt, // ms
-    saveData: navigator.connection.saveData || false
-  } : null,
+  const conexionInfo = {
+    tipoConexion: navigator.connection ? {
+      tipo: navigator.connection.effectiveType,
+      velocidadDownlink: navigator.connection.downlink,
+      rtt: navigator.connection.rtt,
+      saveData: navigator.connection.saveData || false
+    } : null,
+    estaOnline: navigator.onLine,
+    ubicacion: await obtenerUbicacion()
+  };
+
+  const c = conexionInfo.tipoConexion;
   
-  // Online/Offline
-  estaOnline: navigator.onLine,
+  if (!conexionInfo.estaOnline) {
+    return "🔴 OFFLINE - SIN CONEXIÓN";
+  }
   
-  // Geolocalización (requiere permiso)
-  ubicacion: obtenerUbicacion()
+  let resultado = `🟢 ONLINE | CONEXIÓN: ${c?.tipo?.toUpperCase() || 'DESCONOCIDA'} | VELOCIDAD: ${c?.downlink || 'N/A'} MBPS | LATENCIA: ${c?.rtt || 'N/A'} MS`;
+  
+  if (c?.saveData) resultado += " | MODO AHORRO DATOS: ACTIVADO";
+  
+  if (conexionInfo.ubicacion) {
+    resultado += ` | UBICACIÓN: ${conexionInfo.ubicacion.lat.toFixed(4)}°, ${conexionInfo.ubicacion.lon.toFixed(4)}°`;
+  }
+  
+  return resultado;
 };
+
 
 async function obtenerUbicacion() {
   if (!navigator.geolocation) return null;
@@ -284,162 +316,98 @@ async function obtenerUbicacion() {
 
 /*  Dispositivo Específico  */
 
-const dispositivoInfo = {
-  // Tipo de dispositivo
-  tipo: detectarDispositivo(),
+const getInfoDispositivoCompleta = () => {
+  const ua = navigator.userAgent;
   
-  // Marca y modelo (limitado)
-  marcaModelo: detectarMarcaModelo(),
+  // Funciones de detección
+  const getTipo = () => {
+    if (/iPhone/.test(ua)) return 'IPHONE';
+    if (/iPad/.test(ua)) return 'IPAD';
+    if (/Android.*Mobile/.test(ua)) return 'ANDROID PHONE';
+    if (/Android/.test(ua)) return 'ANDROID TABLET';
+    if (/Windows Phone/.test(ua)) return 'WINDOWS PHONE';
+    if (/Mac/.test(ua)) return 'MAC';
+    if (/Win/.test(ua)) return 'WINDOWS PC';
+    if (/Linux/.test(ua)) return 'LINUX PC';
+    return 'DESCONOCIDO';
+  };
   
-  // Sistema operativo
-  so: {
-    nombre: navigator.platform,
-    esAndroid: /Android/.test(userAgent),
-    esIOS: /iPhone|iPad|iPod/.test(userAgent),
-    esWindows: /Win/.test(userAgent),
-    esMac: /Mac/.test(userAgent),
-    esLinux: /Linux/.test(userAgent),
-    version: (userAgent.match(/(Android|iPhone OS|Windows NT|Mac OS X|Linux)[\s\/]([\d._]+)/) || [])[2]
-  },
+  const getMarca = () => {
+    if (/Samsung/.test(ua)) return 'SAMSUNG';
+    if (/iPhone/.test(ua)) return 'APPLE';
+    if (/iPad/.test(ua)) return 'APPLE';
+    if (/Mac/.test(ua)) return 'APPLE';
+    if (/Huawei/.test(ua)) return 'HUAWEI';
+    if (/Xiaomi/.test(ua)) return 'XIAOMI';
+    if (/Sony/.test(ua)) return 'SONY';
+    if (/LG/.test(ua)) return 'LG';
+    return 'DESCONOCIDO';
+  };
   
-  // Es móvil/tablet/desktop
-  esMovil: /Mobi|Android|iPhone|iPad|iPod/.test(userAgent),
-  esTablet: /Tablet|iPad/.test(userAgent),
-  esDesktop: !/Mobi|Android|Tablet|iPad|iPhone|iPod/.test(userAgent)
+  const getSO = () => {
+    if (/Android/.test(ua)) return 'ANDROID';
+    if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+    if (/Win/.test(ua)) return 'WINDOWS';
+    if (/Mac/.test(ua)) return 'MAC OS';
+    if (/Linux/.test(ua)) return 'LINUX';
+    return navigator.platform.toUpperCase();
+  };
+  
+  const getVersionSO = () => {
+    const match = ua.match(/(Android|iPhone OS|Windows NT|Mac OS X|Linux)[\s\/]([\d._]+)/);
+    return match ? match[2].replace(/_/g, '.').replace(/_/g, '.') : 'N/A';
+  };
+  
+  const esMovil = /Mobi|Android|iPhone|iPad|iPod/.test(ua);
+  const esTablet = /Tablet|iPad/.test(ua);
+  const esDesktop = !esMovil && !esTablet;
+  
+  const dispositivo = getTipo();
+  const marca = getMarca();
+  const so = getSO();
+  const version = getVersionSO();
+  const categoria = esMovil ? 'MÓVIL' : esTablet ? 'TABLET' : 'DESKTOP';
+  
+  return `🖥️ CATEGORÍA: ${categoria} | TIPO: ${dispositivo} | MARCA: ${marca} | S.O.: ${so} ${version !== 'N/A' ? version : ''}`;
 };
-
-function detectarDispositivo() {
-  const ua = navigator.userAgent;
-  if (/iPhone/.test(ua)) return 'iPhone';
-  if (/iPad/.test(ua)) return 'iPad';
-  if (/Android.*Mobile/.test(ua)) return 'Android Phone';
-  if (/Android/.test(ua)) return 'Android Tablet';
-  if (/Windows Phone/.test(ua)) return 'Windows Phone';
-  if (/Mac/.test(ua)) return 'Mac';
-  if (/Win/.test(ua)) return 'Windows PC';
-  if (/Linux/.test(ua)) return 'Linux PC';
-  return 'Desconocido';
-}
-
-function detectarMarcaModelo() {
-  const ua = navigator.userAgent;
-  // Detección básica de marcas
-  if (/Samsung/.test(ua)) return 'Samsung';
-  if (/iPhone/.test(ua)) return 'Apple iPhone';
-  if (/iPad/.test(ua)) return 'Apple iPad';
-  if (/Mac/.test(ua)) return 'Apple Mac';
-  if (/Huawei/.test(ua)) return 'Huawei';
-  if (/Xiaomi/.test(ua)) return 'Xiaomi';
-  if (/Sony/.test(ua)) return 'Sony';
-  if (/LG/.test(ua)) return 'LG';
-  return 'Desconocido';
-}
 
 /*  Multimedia y Sensores   */
 
-const multimediaInfo = {
-  // Cámaras disponibles
-  tieneCamara: navigator.mediaDevices ? true : false,
-  camaras: obtenerDispositivosMedia(),
-  
-  // Audio
-  tieneMicrofono: 'mediaDevices' in navigator,
-  
-  // Sensores (requieren permisos)
-  sensores: {
-    acelerometro: 'Accelerometer' in window,
-    giroscopio: 'Gyroscope' in window,
-    magnetometro: 'Magnetometer' in window,
-    sensorLuz: 'AmbientLightSensor' in window,
-    proximidad: 'ProximitySensor' in window
-  },
-  
-  // Battery API
-  bateria: obtenerInfoBateria()
-};
-
-async function obtenerDispositivosMedia() {
-  if (!navigator.mediaDevices) return [];
-  
+const getMultimediaDetallada = async () => {
   try {
-    const dispositivos = await navigator.mediaDevices.enumerateDevices();
-    return dispositivos.filter(d => d.kind === 'videoinput');
-  } catch {
-    return [];
+    // Obtener cámaras
+    let camarasCount = 0;
+    if (navigator.mediaDevices) {
+      const dispositivos = await navigator.mediaDevices.enumerateDevices();
+      camarasCount = dispositivos.filter(d => d.kind === 'videoinput').length;
+    }
+    
+    // Sensores
+    const sensoresList = [];
+    if ('Accelerometer' in window) sensoresList.push('📈 ACELERÓMETRO');
+    if ('Gyroscope' in window) sensoresList.push('🔄 GIROSCÓPIO');
+    if ('Magnetometer' in window) sensoresList.push('🧭 MAGNETÓMETRO');
+    if ('AmbientLightSensor' in window) sensoresList.push('💡 SENSOR LUZ');
+    if ('ProximitySensor' in window) sensoresList.push('📏 PROXIMIDAD');
+    
+    // Batería
+    let bateriaStr = '';
+    if ('getBattery' in navigator) {
+      const bat = await navigator.getBattery();
+      const nivel = Math.round(bat.level * 100);
+      const icono = bat.charging ? '⚡' : '🔋';
+      bateriaStr = ` | ${icono} BATERÍA: ${nivel}%`;
+      
+      if (bat.chargingTime !== Infinity && bat.chargingTime > 0) {
+        bateriaStr += ` (${Math.round(bat.chargingTime / 60)}MIN PARA CARGAR)`;
+      }
+    }
+    
+    return `📷 ${camarasCount > 0 ? `${camarasCount} CÁMARA${camarasCount > 1 ? 'S' : ''}` : 'SIN CÁMARAS'} | 🎤 ${'mediaDevices' in navigator ? 'MIC SÍ' : 'MIC NO'}${sensoresList.length > 0 ? ` | ${sensoresList.join(' ')}` : ' | SIN SENSORES'}${bateriaStr}`;
+    
+  } catch (error) {
+    return `⚠️ ERROR OBTENIENDO INFORMACIÓN MULTIMEDIA`;
   }
-}
-
-async function obtenerInfoBateria() {
-  if (!('getBattery' in navigator)) return null;
-  
-  try {
-    const bateria = await navigator.getBattery();
-    return {
-      nivel: bateria.level * 100 + '%',
-      cargando: bateria.charging,
-      tiempoCarga: bateria.chargingTime,
-      tiempoDescarga: bateria.dischargingTime
-    };
-  } catch {
-    return null;
-  }
-}
-
-/*      Información de Rendimiento      */
-
-const rendimientoInfo = {
-  // Timing API
-  tiempoCarga: window.performance ? {
-    dns: performance.timing.domainLookupEnd - performance.timing.domainLookupStart,
-    conexion: performance.timing.connectEnd - performance.timing.connectStart,
-    respuesta: performance.timing.responseEnd - performance.timing.requestStart,
-    dom: performance.timing.domComplete - performance.timing.domLoading,
-    total: performance.timing.loadEventEnd - performance.timing.navigationStart
-  } : null,
-  
-  // Memoria (Chrome)
-  memoriaUsada: performance.memory ? {
-    usado: (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + ' MB',
-    total: (performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(2) + ' MB',
-    limite: (performance.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2) + ' MB'
-  } : null,
-  
-  // WebGL (información de GPU)
-  gpu: obtenerInfoGPU()
-};
-
-function obtenerInfoGPU() {
-  const canvas = document.createElement('canvas');
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  
-  if (!gl) return null;
-  
-  const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-  return debugInfo ? {
-    vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
-    renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-  } : null;
-}
-
-/*      Información de Zona Horaria e Internacionalización      */
-
-const internacionalInfo = {
-  // Zona horaria
-  zonaHoraria: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  
-  // Formato de números y fechas
-  locale: navigator.language || navigator.userLanguage,
-  locales: navigator.languages || [navigator.language],
-  
-  // Formato de hora
-  formatoHora24: new Intl.DateTimeFormat(navigator.language, { 
-    hour: 'numeric' 
-  }).formatToParts(new Date()).some(part => 
-    part.type === 'hour' && part.value > 12
-  ),
-  
-  // Moneda local
-  moneda: Intl.NumberFormat().resolvedOptions().currency || 'USD'
 };
 
 /************************************************/
@@ -447,18 +415,15 @@ const internacionalInfo = {
 /************************************************/
 
 async function obtenerTodaInfoDispositivo() {
-
     try {
         const infoCompleta = {
-        timestamp: new Date().toISOString(),
-        navegador: browserInfo,
-        hardware: hardwareInfo,
-        pantalla: pantallaInfo,
-        conexion: conexionInfo,
-        dispositivo: dispositivoInfo,
-        multimedia: multimediaInfo,
-        rendimiento: rendimientoInfo,
-        internacional: internacionalInfo,
+            timestamp: new Date().toISOString(),
+            navegador: infoDetallada(userAgent),
+            hardware: 'RAM:' + hardwareInfo.memoria.toString() + ' GB',
+            pantalla: infoPantallaDetallada(),
+            conexion: await infoConexionCompleta(),
+            dispositivo: getInfoDispositivoCompleta(),
+            multimedia: await getMultimediaDetallada()
         };
         
         return infoCompleta;

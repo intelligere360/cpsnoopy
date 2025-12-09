@@ -611,66 +611,8 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // =============================================
-// SISTEMA DE DETECCIÓN DE CONTACTO
+// MOSTRANDO LISTADO DE ARTICULOS/PRODUCTOS EXISTENTES
 // =============================================
-
-// Reemplazar la función existente de configurarTrackingContacto
-function configurarTrackingContacto() {
-    // Detectar clics en enlaces de WhatsApp
-    document.addEventListener('click', function(e) {
-        const target = e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp"]');
-        if (target && AppState.productoActual) {
-            e.preventDefault();
-            const producto = obtenerProductoActual();
-            registerProductConsult(producto, 'Whatsapp')
-                .finally(() => {
-                    window.location.href = target.href;
-                });
-        }
-    });
-    // Detectar clics en enlaces de teléfono
-    document.addEventListener('click', function(e) {
-        const target = e.target.closest('a[href^="tel:"]');
-        if (target && AppState.productoActual) {
-            e.preventDefault();
-            const producto = obtenerProductoActual();
-            registerProductConsult(producto, 'Llamada')
-                .finally(() => {
-                    window.location.href = target.href;
-                });
-        }
-    });
-    // ✅ NUEVO: Detectar clics en enlaces de SMS
-    document.addEventListener('click', function(e) {
-        const target = e.target.closest('a[href^="sms:"]');
-        if (target && AppState.productoActual) {
-            e.preventDefault();
-            const producto = obtenerProductoActual();
-            
-            registerProductConsult(producto, 'SMS')
-                .finally(() => {
-                    window.location.href = target.href;
-                });
-        }
-    });
-    // ✅ NUEVO: Detectar clics en enlaces de correo
-    document.addEventListener('click', function(e) {
-        const target = e.target.closest('a[href^="mailto:"]');
-        if (target && AppState.productoActual) {
-            e.preventDefault();
-            const producto = obtenerProductoActual();
-            
-            registerProductConsult(producto, 'Email')
-                .finally(() => {
-                    // Para correo, dejamos que se abra normalmente
-                    // Pero primero registramos la consulta
-                    setTimeout(() => {
-                        window.location.href = target.href;
-                    }, 100);
-                });
-        }
-    });
-}
 
 async function mostrarProductosDesdeCache(productosAMostrar) {
     const grid = document.getElementById('productsGrid');
@@ -746,10 +688,13 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
 /**
  * Muestra esqueletos de carga mientras se obtienen los productos
  */
-function mostrarEsqueletosCarga() {
+async function mostrarEsqueletosCarga() {
     const grid = document.getElementById('productsGrid');
-    const skeletonCount = 8; // Número de esqueletos a mostrar
-    
+    // CARGAR LOS PRODUCTOS...
+    let productos = await getJson(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID);
+    // CALCULAR # TOTAL DE PRODUCTOS
+    const skeletonCount = length(productos);
+
     grid.innerHTML = Array(skeletonCount).fill(0).map(() => `
         <div class="product-card skeleton">
             <div class="product-image-container">
@@ -762,6 +707,8 @@ function mostrarEsqueletosCarga() {
             </div>
         </div>
     `).join('');
+    // RETORNAR LA LISTA ARRAY CON TODOS LOS PRODUCTOS Y SUS DETALLES
+    return productos;
 }
 /**
  * Procesa las imágenes que vienen en el JSON
@@ -1749,10 +1696,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // 6. Configurar eventos básicos
         configurarEventListeners();
-        
-        // 7. Configurar sistema de notificaciones
-        //configurarTrackingContacto();
-        
+            
         // 8. Configurar detección de conexión
         configurarDeteccionConexion();
         
@@ -2411,10 +2355,9 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
     try {
         console.log('📦 Iniciando carga de productos con precarga persistente...');
         mostrarLoaderRapido();
-        mostrarEsqueletosCarga();
         
-        // 1. CARGAR JSON DE LOS PRODUCTOS PRIMERO
-        const productosData = await getJson(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID);
+        // 1. MOSTRAR ESQUELETO DEL LISTADO, RETORNAR PRODUCTOS Y CARGAR JSON DE LOS PRODUCTOS PRIMERO
+        const productosData = mostrarEsqueletosCarga();
         
         // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
         productos = productosData.map(producto => {
