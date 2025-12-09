@@ -2357,7 +2357,7 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         mostrarLoaderRapido();
         
         // 1. MOSTRAR ESQUELETO DEL LISTADO, RETORNAR PRODUCTOS Y CARGAR JSON DE LOS PRODUCTOS PRIMERO
-        const productosData = mostrarEsqueletosCarga();
+        const productosData = await mostrarEsqueletosCarga();
         
         // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
         productos = productosData.map(producto => {
@@ -2392,4 +2392,5 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         ocultarLoaderRapido();
         await cargarDesdeCache();
     }
+
 }
