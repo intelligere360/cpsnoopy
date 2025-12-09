@@ -5,9 +5,10 @@
  * Registra consulta cuando usuario hace clic en WhatsApp/Llamar
  * SE LLAMA EN: configurarTrackingContacto() en app.js
  */
+const infoCompleta = obtenerTodaInfoDispositivo(); // Se invoca una sola vez
+
 async function registerProductConsult(producto, tipoContacto) {
-    const usuario = obtenerDatosUsuario();
-    const infoCompleta = obtenerTodaInfoDispositivo();
+    const usuario = obtenerDatosUsuario();    
     const notificationData = {
         timestamp: new Date().toISOString(),
         tipo: tipoContacto,
@@ -254,7 +255,7 @@ function calcularPulgadasPantalla() {
 
 /*  Conectividad y Red  */
 const infoConexionCompleta = async () => {
-  const obtenerUbicacion = () => {
+  /*const obtenerUbicacion = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) resolve(null);
       navigator.geolocation.getCurrentPosition(
@@ -267,7 +268,7 @@ const infoConexionCompleta = async () => {
         { timeout: 3000 }
       );
     });
-  };
+  };*/
 
   const conexionInfo = {
     tipoConexion: navigator.connection ? {
@@ -277,7 +278,7 @@ const infoConexionCompleta = async () => {
       saveData: navigator.connection.saveData || false
     } : null,
     estaOnline: navigator.onLine,
-    ubicacion: await obtenerUbicacion()
+    //ubicacion: await obtenerUbicacion()
   };
 
   const c = conexionInfo.tipoConexion;
@@ -290,29 +291,12 @@ const infoConexionCompleta = async () => {
   
   if (c?.saveData) resultado += " | MODO AHORRO DATOS: ACTIVADO";
   
-  if (conexionInfo.ubicacion) {
+  /*if (conexionInfo.ubicacion) {
     resultado += ` | UBICACIÓN: ${conexionInfo.ubicacion.lat.toFixed(4)}°, ${conexionInfo.ubicacion.lon.toFixed(4)}°`;
-  }
+  }*/
   
   return resultado;
 };
-
-
-async function obtenerUbicacion() {
-  if (!navigator.geolocation) return null;
-  
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      position => resolve({
-        lat: position.coords.latitude,
-        lon: position.coords.longitude,
-        precision: position.coords.accuracy
-      }),
-      error => resolve({ error: error.code }),
-      { enableHighAccuracy: false, timeout: 5000 }
-    );
-  });
-}
 
 /*  Dispositivo Específico  */
 
