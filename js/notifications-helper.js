@@ -5,7 +5,7 @@
  * Registra consulta cuando usuario hace clic en WhatsApp/Llamar
  * SE LLAMA EN: configurarTrackingContacto() en app.js
  */
-const infoCompleta = obtenerTodaInfoDispositivo(); // Se invoca una sola vez
+const infoCompleta = await obtenerTodaInfoDispositivo(); // Se invoca una sola vez
 
 async function registerProductConsult(producto, tipoContacto) {
     const usuario = obtenerDatosUsuario();    

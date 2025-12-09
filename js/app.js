@@ -2392,5 +2392,4 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         ocultarLoaderRapido();
         await cargarDesdeCache();
     }
-
 }
