@@ -899,97 +899,171 @@ async function mostrarDetallesProducto(productoId) {
     await crearCarruselConCache(producto);
     
     // Actualizar enlaces de contacto
-    const str_precio_saber = AppState.config.mostrar_precios ? formatearPrecio(producto.precioMin, producto.precioMax) : `¿Cuándo y dónde lo puedo ver?`;
+    const str_precio_saber = AppState.config.mostrar_precios ? 
+        formatearPrecio(producto.precioMin, producto.precioMax) : 
+        `¿Cuándo y dónde lo puedo ver?`;
     
-    // Mensaje para WhatsApp
-    const mensaje = `Hola, me interesa: ${producto.nombre} - ${str_precio_saber}`;
-    const urlWhatsapp = `https://wa.me/${configContacto.whatsapp}?text=${encodeURIComponent(mensaje)}`;
-    document.getElementById('whatsappModal').href = urlWhatsapp;
-    
-    // ✅ NUEVO: Configurar botón inteligente SMS/Correo
-    configurarBotonInteligente(producto, str_precio_saber);
+    // ✅ NUEVO: Configurar todos los botones de contacto
+    configurarBotonesContacto(producto, str_precio_saber);
 
     document.getElementById('productModal').style.display = 'block';
 }
-// ✅ FUNCIÓN MEJORADA: Configurar botón inteligente SMS/Correo
-function configurarBotonInteligente(producto, str_precio_saber) {
-    const btn = document.getElementById('contactIntelligentBtn');
-    const icon = document.getElementById('contactIcon');
-    const text = document.getElementById('contactText');
+
+// ✅ FUNCIÓN MEJORADA: Configurar todos los botones de contacto
+function configurarBotonesContacto(producto, str_precio_saber) {
+    // Detectar si es dispositivo móvil o tablet
+    const esDispositivoMovil = detectarDispositivoMovil();
     
-    // Mensaje común para ambos modos
-    const mensaje = `Consulta sobre producto Peter Snoopy: ${producto.nombre} - ${str_precio_saber}`;
+    // Mensaje para todos los contactos
+    const mensaje = `Hola, me interesa: ${producto.nombre} - ${str_precio_saber}`;
     const asuntoCorreo = `Consulta: ${producto.nombre}`;
     
-    // Detectar mejor si es dispositivo móvil
-    const esMovil = detectarDispositivoMovil();
+    // Configurar cada botón
+    configurarBotonLlamada(producto, str_precio_saber);
+    configurarBotonWhatsApp(producto, str_precio_saber);
+    configurarBotonSMS(producto, str_precio_saber);
+    configurarBotonCorreo(producto, str_precio_saber);
     
-    // Obtener configuraciones con valores por defecto
+    // Si es dispositivo móvil/tablet, aplicar layout 2x2
+    if (esDispositivoMovil) {
+        aplicarLayout2x2();
+    }
+}
+
+// Configurar botón de llamada
+function configurarBotonLlamada(producto, str_precio_saber) {
     const telefono = configContacto.telefono || '+584126597297';
-    const email = configContacto.email || 'ramonsimancas61@gmail.com';
+    const btn = document.getElementById('btnLlamada');
     
-    if (esMovil) {
-        // MODO SMS para móviles
-        const urlSMS = `sms:${telefono}?body=${encodeURIComponent(mensaje)}`;
-        btn.href = urlSMS;
-        icon.textContent = '💭';
-        text.textContent = 'Enviar SMS';
-        btn.classList.remove('email-mode');
-        btn.title = 'Abre la app de mensajes para enviar SMS';
+    if (btn) {
+        btn.href = `tel:${telefono}`;
+        btn.title = `Llamar a ${telefono}`;
         
-        console.log(`📱 Modo SMS activado: ${telefono}`);
-    } else {
-        // MODO CORREO para escritorio
-        const urlCorreo = `mailto:${email}?subject=${encodeURIComponent(asuntoCorreo)}&body=${encodeURIComponent(mensaje)}`;
+        // Configurar tracking
+        btn.onclick = function(e) {
+            e.preventDefault();
+            registerProductConsult(producto, 'Llamada')
+                .finally(() => {
+                    window.location.href = btn.href;
+                });
+        };
+    }
+}
+
+// Configurar botón de WhatsApp
+function configurarBotonWhatsApp(producto, str_precio_saber) {
+    const whatsapp = configContacto.whatsapp || '584126597297';
+    const mensaje = `Hola, me interesa: ${producto.nombre} - ${str_precio_saber}`;
+    const urlWhatsapp = `https://wa.me/${whatsapp}?text=${encodeURIComponent(mensaje)}`;
+    const btn = document.getElementById('whatsappModal');
+    
+    if (btn) {
+        btn.href = urlWhatsapp;
+        btn.title = 'Abrir WhatsApp para consultar';
+        
+        // Configurar tracking
+        btn.onclick = function(e) {
+            e.preventDefault();
+            registerProductConsult(producto, 'Whatsapp')
+                .finally(() => {
+                    window.location.href = btn.href;
+                });
+        };
+    }
+}
+
+// Configurar botón de SMS
+function configurarBotonSMS(producto, str_precio_saber) {
+    const telefono = configContacto.telefono || '+584126597297';
+    const mensaje = `Consulta sobre producto Peter Snoopy: ${producto.nombre} - ${str_precio_saber}`;
+    const urlSMS = `sms:${telefono}?body=${encodeURIComponent(mensaje)}`;
+    const btn = document.getElementById('btnSMS');
+    
+    if (btn) {
+        btn.href = urlSMS;
+        btn.title = 'Enviar SMS';
+        
+        // Configurar tracking
+        btn.onclick = function(e) {
+            e.preventDefault();
+            registerProductConsult(producto, 'SMS')
+                .finally(() => {
+                    window.location.href = btn.href;
+                });
+        };
+    }
+}
+
+// Configurar botón de Correo
+function configurarBotonCorreo(producto, str_precio_saber) {
+    const email = configContacto.email || 'ramonsimancas61@gmail.com';
+    const mensaje = `Consulta sobre producto Peter Snoopy: ${producto.nombre} - ${str_precio_saber}`;
+    const asuntoCorreo = `Consulta: ${producto.nombre}`;
+    const urlCorreo = `mailto:${email}?subject=${encodeURIComponent(asuntoCorreo)}&body=${encodeURIComponent(mensaje)}`;
+    const btn = document.getElementById('btnCorreo');
+    
+    if (btn) {
         btn.href = urlCorreo;
-        icon.textContent = '✉️';
-        text.textContent = 'Enviar Correo';
-        btn.classList.add('email-mode');
-        btn.title = `Abre tu cliente de correo para contactar a ${email}`;
+        btn.title = `Enviar correo a ${email}`;
+        
+        // Configurar tracking
+        btn.onclick = function(e) {
+            e.preventDefault();
+            registerProductConsult(producto, 'Email')
+                .finally(() => {
+                    // Abrir el cliente de correo
+                    setTimeout(() => {
+                        window.location.href = btn.href;
+                    }, 100);
+                });
+        };
         
         // Manejo alternativo si no hay cliente de correo
-        btn.onclick = function(e) {
-            // Intenta abrir el cliente de correo
-            // Si falla, ofrecer copiar el correo al portapapeles
+        btn.addEventListener('click', function(e) {
             try {
-                // Dejar que el navegador maneje el mailto
-                return true;
+                return true; // Dejar que el navegador maneje el mailto
             } catch (error) {
                 e.preventDefault();
                 // Opción alternativa: copiar correo al portapapeles
                 navigator.clipboard.writeText(email)
                     .then(() => {
-                        alert(`Correo copiado: ${email}\nPega en tu cliente de correo preferido.`);
+                        alert(`Correo copiado: ${email}\nPega en tu cliente de correo preferido.\n\nAsunto: ${asuntoCorreo}\n\nMensaje: ${mensaje}`);
                     })
                     .catch(() => {
-                        alert(`Para contactar, envía un correo a: ${email}\nAsunto: ${asuntoCorreo}`);
+                        alert(`Para contactar, envía un correo a: ${email}\n\nAsunto: ${asuntoCorreo}\n\nMensaje: ${mensaje}`);
                     });
                 return false;
             }
-        };
-        
-        console.log(`💻 Modo Correo activado: ${email}`);
-    }
-    
-    // Asegurar que el botón abra en nueva ventana solo para escritorio
-    if (!esMovil) {
-        btn.target = '_blank';
-    } else {
-        btn.removeAttribute('target');
+        });
     }
 }
-// ✅ FUNCIÓN AUXILIAR: Detectar dispositivo móvil
+
+// Aplicar layout 2x2 para dispositivos móviles
+function aplicarLayout2x2() {
+    const modalActions = document.querySelector('.modal-actions');
+    if (modalActions) {
+        modalActions.classList.add('layout-2x2');
+    }
+}
+
+// ✅ FUNCIÓN AUXILIAR: Detectar dispositivo móvil o tablet
 function detectarDispositivoMovil() {
-    // Detección por User Agent
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const esPorUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     
-    // Detección por tamaño de pantalla y capacidades táctiles
-    const esPorPantalla = window.innerWidth <= 768;
+    // Detección por User Agent
+    const esMovilPorUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    // Detección por tamaño de pantalla
+    const esPorPantalla = window.innerWidth <= 1024; // Incluye tablets
+    
+    // Detección por capacidades táctiles
     const tieneTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     
+    // Es tablet si tiene pantalla mediana y capacidades táctiles
+    const esTablet = window.innerWidth >= 768 && window.innerWidth <= 1024 && tieneTouch;
+    
     // Combinar criterios para mayor precisión
-    return (esPorUserAgent && esPorPantalla) || (tieneTouch && esPorPantalla);
+    return (esMovilPorUA && esPorPantalla) || (tieneTouch && esPorPantalla) || esTablet;
 }
 /**
  * Crea el carrusel usando imágenes desde la cache de IndexedDB

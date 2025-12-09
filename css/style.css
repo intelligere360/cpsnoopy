@@ -372,6 +372,7 @@ body {
     margin-bottom: 0;
 }
 
+/* ✅ REEMPLAZAR CON ESTA VERSIÓN MEJORADA: */
 .modal-actions {
     display: flex;
     gap: 15px;
@@ -379,12 +380,7 @@ body {
     background: #f8f9fa;
     border-top: 1px solid #eee;
     flex-wrap: wrap;
-}
-
-.modal-actions .contact-btn {
-    flex: 1;
-    min-width: 200px;
-    text-align: center;
+    transition: all 0.3s ease;
 }
 
 /* FOOTER */
@@ -1606,45 +1602,225 @@ input, textarea {
 }
 
 /* ============================================= */
-/* ESTILOS PARA EL BOTÓN INTELIGENTE SMS/CORREO */
+/* ESTILOS PARA EL LAYOUT 2x2 EN MÓVILES */
 /* ============================================= */
 
-.contact-intelligent-btn {
-    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 16px;
-    text-align: center;
+/* Contenedor principal con diseño 2x2 */
+.modal-actions.layout-2x2 {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+}
+
+/* Fila de botones */
+.modal-actions .contact-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Botones individuales */
+.modal-actions .contact-btn {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    cursor: pointer;
+    padding: 15px 8px;
+    text-align: center;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(155, 89, 182, 0.2);
+    border: 2px solid transparent;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
-.contact-intelligent-btn:hover {
+/* Iconos dentro de los botones */
+.modal-actions .contact-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+    line-height: 1;
+}
+
+/* Texto dentro de los botones */
+.modal-actions .contact-text {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* ESTILOS ESPECÍFICOS PARA CADA TIPO DE BOTÓN */
+
+/* Botón de llamada */
+.contact-btn.phone-btn {
+    background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+    color: white;
+}
+
+.contact-btn.phone-btn:hover {
+    background: linear-gradient(135deg, #219653 0%, #1e8449 100%);
+    border-color: #1e8449;
+}
+
+/* Botón de WhatsApp */
+.contact-btn.whatsapp-btn {
+    background: linear-gradient(135deg, #25D366 0%, #1DA851 100%);
+    color: white;
+}
+
+.contact-btn.whatsapp-btn:hover {
+    background: linear-gradient(135deg, #1DA851 0%, #189545 100%);
+    border-color: #189545;
+}
+
+/* Botón de SMS */
+.contact-btn.sms-btn {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.contact-btn.sms-btn:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #2471a3 100%);
+    border-color: #2471a3;
+}
+
+/* Botón de Correo */
+.contact-btn.email-btn {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+}
+
+.contact-btn.email-btn:hover {
     background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(155, 89, 182, 0.3);
+    border-color: #7d3c98;
 }
 
-.contact-intelligent-btn:active {
-    transform: translateY(0);
+/* Efecto hover común para todos los botones */
+.modal-actions .contact-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* Variante para modo correo */
-.contact-intelligent-btn.email-mode {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
+/* Efecto active (click) */
+.modal-actions .contact-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.contact-intelligent-btn.email-mode:hover {
-    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
-    box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
+/* ============================================= */
+/* RESPONSIVE - SOLO APLICAR 2x2 EN MÓVILES/TABLETS */
+/* ============================================= */
+
+/* En móviles y tablets (hasta 1024px) */
+@media (max-width: 1024px) {
+    .modal-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .modal-actions .contact-row {
+        flex-direction: row;
+    }
+    
+    .modal-actions .contact-btn {
+        padding: 18px 10px;
+    }
+    
+    .modal-actions .contact-icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+    
+    .modal-actions .contact-text {
+        font-size: 14px;
+    }
+}
+
+/* En móviles pequeños */
+@media (max-width: 480px) {
+    .modal-actions.layout-2x2 {
+        padding: 12px 15px;
+        gap: 10px;
+    }
+    
+    .modal-actions .contact-row {
+        gap: 10px;
+    }
+    
+    .modal-actions .contact-btn {
+        padding: 15px 5px;
+    }
+    
+    .modal-actions .contact-icon {
+        font-size: 26px;
+        margin-bottom: 6px;
+    }
+    
+    .modal-actions .contact-text {
+        font-size: 12px;
+    }
+}
+
+/* En escritorio (más de 1024px) */
+@media (min-width: 1025px) {
+    /* Mantener diseño original en fila horizontal */
+    .modal-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 20px 30px;
+    }
+    
+    .modal-actions .contact-row {
+        display: contents; /* Los botones se comportan como elementos independientes */
+    }
+    
+    .modal-actions .contact-btn {
+        flex: 1;
+        min-width: 200px;
+        padding: 15px 20px;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+    
+    .modal-actions .contact-icon {
+        font-size: 24px;
+        margin-bottom: 0;
+    }
+    
+    .modal-actions .contact-text {
+        font-size: 16px;
+    }
+}
+
+/* Orientación horizontal en tablets */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .modal-actions.layout-2x2 {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .modal-actions .contact-row {
+        width: 100%;
+    }
+    
+    .modal-actions .contact-btn {
+        padding: 12px 5px;
+    }
+    
+    .modal-actions .contact-icon {
+        font-size: 24px;
+    }
+    
+    .modal-actions .contact-text {
+        font-size: 11px;
+    }
 }
