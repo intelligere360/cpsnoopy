@@ -693,7 +693,7 @@ async function mostrarEsqueletosCarga() {
     // CARGAR LOS PRODUCTOS...
     let productos = await getJson(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID);
     // CALCULAR # TOTAL DE PRODUCTOS
-    const skeletonCount = length(productos);
+    const skeletonCount = productos.length;
 
     grid.innerHTML = Array(skeletonCount).fill(0).map(() => `
         <div class="product-card skeleton">
