@@ -12,19 +12,16 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1UyzCyHVrBu9b1e0TWn-gvnZpT8TvjJfq",
                 "nombre": "2_1.jpg",
                 "principal": false,
                 "orden": 1
             },
             {
-                "id": "17YG2BKj_6cvjjNxbUaSpNJbcFpTNrYEj",
                 "nombre": "2_2.jpg",
                 "principal": true,
                 "orden": 2
             },
             {
-                "id": "1_sTKov4gQ5ymBJvrIRilw26uE4ayJNUJ",
                 "nombre": "2_3.jpg",
                 "principal": false,
                 "orden": 3
@@ -45,19 +42,16 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1c-ztC2lKIOGWOic8O07myEb9yqtc9JZ7",
                 "nombre": "3_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "1JpTziBYGzYrmWE1rTkogCA0eIfDAZxOL",
                 "nombre": "3_2.jpg",
                 "principal": false,
                 "orden": 2
             },
             {
-                "id": "1kIyTy788OdezrP6dPv3JeGTRiItBqSMk",
                 "nombre": "3_3.jpg",
                 "principal": false,
                 "orden": 3
@@ -78,13 +72,11 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1dX2KROC1i5jGby4cMNYBNwZFxa2tAupY",
                 "nombre": "4_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "1OddkaJCkqsThYK7lVOoJVOIv5KLS7HQP",
                 "nombre": "4_2.jpg",
                 "principal": false,
                 "orden": 2
@@ -105,7 +97,6 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1TGzpY59sJNMbPQZkbVyAkePCanaeSZK0",
                 "nombre": "5_1.jpg",
                 "principal": true,
                 "orden": 1
@@ -126,13 +117,11 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1meM1jR3Wytykc0DC0HQ0K6uFwU5CTG6e",
                 "nombre": "6_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "10wAtXq3CdMrDNvkpkTZE-mIp12spISPT",
                 "nombre": "6_2.jpg",
                 "principal": false,
                 "orden": 2
@@ -153,7 +142,6 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1o3uE6OYVM8KPohulkKC4CNXG455hB25h",
                 "nombre": "7_1.jpg",
                 "principal": true,
                 "orden": 1
@@ -174,13 +162,11 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1XHozVhRxp7a5hbEOTYqx0vdwQAMpVg1L",
                 "nombre": "8_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "1WMZl4ipG51z1pW51R7PfTJDCSvYZzPhL",
                 "nombre": "8_2.jpg",
                 "principal": false,
                 "orden": 2
@@ -201,7 +187,6 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1x-vWoYGFIdGIY9hCJDfK9Gt-MKgg_ynd",
                 "nombre": "9_1.jpg",
                 "principal": true,
                 "orden": 1
@@ -222,49 +207,41 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "12Qby4oqcKPM3SNXyIowH8fTrHfm8sPEc",
                 "nombre": "10_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "1Jkg8z6O_z_t6LEpLtBKsz0HMuruHfsoB",
                 "nombre": "10_2.jpg",
                 "principal": false,
                 "orden": 2
             },
             {
-                "id": "1ksGxJNevKKGhqwDEeo3t5GhsOOicleVh",
                 "nombre": "10_3.jpg",
                 "principal": false,
                 "orden": 3
             },
             {
-                "id": "1uL7MutuMoGjtkwzD9htXAddd-udSP_Gs",
                 "nombre": "10_4.jpg",
                 "principal": false,
                 "orden": 4
             },
             {
-                "id": "1q4ybuSO70Es-BS4xH8HZcGWtJDpHF3P0",
                 "nombre": "10_5.jpg",
                 "principal": false,
                 "orden": 5
             },
             {
-                "id": "11_K6NRG10Hpnm_3eD1ex5Ywu8y0w7ZZY",
                 "nombre": "10_6.jpg",
                 "principal": false,
                 "orden": 6
             },
             {
-                "id": "103F7RbZ9SklzEP5PWwAy7ZxfsqCJrwLL",
                 "nombre": "10_7.jpg",
                 "principal": false,
                 "orden": 7
             },
             {
-                "id": "1lpqF6WaQE3aFrHA9SKOc0O0e2glhmDMT",
                 "nombre": "10_8.jpg",
                 "principal": false,
                 "orden": 8
@@ -285,7 +262,6 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1n-Cha3qeDP9C5wLy0rHtjo1j3mBpbTMi",
                 "nombre": "11_1.jpg",
                 "principal": true,
                 "orden": 1
@@ -306,7 +282,6 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1vPyldyvmkOtwP9R2RWdCg8KRr1_qMjyY",
                 "nombre": "12_1.jpg",
                 "principal": true,
                 "orden": 1
@@ -327,7 +302,6 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1hja-9QL1mWzkrh8HjsytJ-gRW0A1UK6j",
                 "nombre": "13_1.jpg",
                 "principal": true,
                 "orden": 1
@@ -348,13 +322,11 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1ExopyJ1YKFYnIK2X_mbSlz0yqT0BQqm0",
                 "nombre": "14_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "1L1zCex8mmWp_MVSYGOrfO5rZYp4OFf_d",
                 "nombre": "14_2.jpg",
                 "principal": false,
                 "orden": 2
@@ -375,13 +347,11 @@
         "activo": true,
         "imagenes": [
             {
-                "id": "1h_OTeHK0Z5m3iK-W2INg3cCqHeMe0WZW",
                 "nombre": "15_1.jpg",
                 "principal": true,
                 "orden": 1
             },
             {
-                "id": "1-uF312iEkqaWX73As1dy3PDv60seyfXv",
                 "nombre": "15_2.jpg",
                 "principal": false,
                 "orden": 2

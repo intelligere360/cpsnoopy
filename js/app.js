@@ -120,19 +120,24 @@ async function cargarConfiguracion() {
         console.log('⚙️ Cargando configuración...');
         
         // Intentar cargar desde Google Drive
-        const configData = await getJson(GOOGLE_DRIVE_CONFIG.CONFIG_JSON_ID);
+        const configData = await getLocalJson(LOCAL_CONFIG.CONFIG_JSON);
         
-        // Actualizar configuración
-        if (configData && configData.length > 0) {
+        // Verificar estructura del archivo
+        if (configData && typeof configData === 'object') {
+            // Si es un objeto directo
+            AppState.config = { ...AppState.config, ...configData };
+            console.log('✅ Configuración local cargada:', AppState.config);
+        } else if (Array.isArray(configData) && configData.length > 0) {
+            // Si es un array (compatibilidad)
             AppState.config = { ...AppState.config, ...configData[0] };
-            console.log('✅ Configuración cargada:', AppState.config);
+            console.log('✅ Configuración local cargada desde array:', AppState.config);
         }
         
         // Guardar en cache local
         guardarConfigCache(AppState.config);
         
     } catch (error) {
-        console.warn('❌ Error cargando configuración, usando cache o valores por defecto:', error);
+        console.warn('❌ Error cargando configuración local, usando cache o valores por defecto:', error);
         await cargarConfigDesdeCache();
     }
 }
@@ -445,7 +450,7 @@ function obtenerDatosUsuario() {
     return {
         sessionId: AppState.sessionId,
         timestamp: new Date().toISOString(),
-        plataforma: navigator.platform,
+        plataforma: navigator.userAgent.platform,
         idioma: navigator.language,
         userAgent: navigator.userAgent.substring(0, 100)
     };
@@ -691,7 +696,7 @@ async function mostrarProductosDesdeCache(productosAMostrar) {
 async function mostrarEsqueletosCarga() {
     const grid = document.getElementById('productsGrid');
     // CARGAR LOS PRODUCTOS...
-    let productos = await getJson(GOOGLE_DRIVE_CONFIG.PRODUCTS_JSON_ID);
+    let productos = await getLocalJson(LOCAL_CONFIG.PRODUCTS_JSON);
     // CALCULAR # TOTAL DE PRODUCTOS
     const skeletonCount = productos.length;
 
@@ -716,16 +721,15 @@ async function mostrarEsqueletosCarga() {
 function procesarImagenesDesdeJSON(producto) {
     if (producto.imagenes && Array.isArray(producto.imagenes)) {
         return producto.imagenes.map(img => ({
-            id: img.id,
-            url: buildImageUrl(img.id),  // ← Construye URL con ID real de Google Drive
+            id: img.id || img.nombre, // Usar nombre como ID
+            url: buildLocalImageUrl(img.nombre), // ← Cambio importante
             nombre: img.nombre,
             principal: img.principal || false,
             orden: img.orden || 1
         }));
     }
     
-    // Fallback para productos sin array de imágenes
-    console.warn(`⚠️ Producto ${producto.id} sin array de imágenes, usando fallback`);
+    // Fallback
     return [{
         id: `${producto.id}_1`,
         url: './images/placeholder.jpg',
@@ -742,10 +746,10 @@ function obtenerImagenPrincipalDesdeJSON(producto) {
         // Buscar imagen marcada como principal
         const principal = producto.imagenes.find(img => img.principal);
         if (principal) {
-            return principal.url;
+            return buildLocalImageUrl(principal.nombre); // ← Cambio
         }
         // Si no hay principal, usar la primera
-        return producto.imagenes[0].url;
+        return buildLocalImageUrl(producto.imagenes[0].nombre); // ← Cambio
     }
     
     return './images/placeholder.jpg';
@@ -2358,6 +2362,10 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         
         // 1. MOSTRAR ESQUELETO DEL LISTADO, RETORNAR PRODUCTOS Y CARGAR JSON DE LOS PRODUCTOS PRIMERO
         const productosData = await mostrarEsqueletosCarga();
+
+        if (!productosData || productosData.length === 0) {
+            throw new Error('No se pudieron cargar los productos');
+        }
         
         // 2. PROCESAR PRODUCTOS RÁPIDAMENTE
         productos = productosData.map(producto => {
