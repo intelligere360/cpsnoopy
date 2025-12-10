@@ -1,11 +1,11 @@
 [
     {
         "id": 2,
-        "nombre": "Cauchos Usados All-Terrain LT 265/70/R17",
+        "nombre": "Cauchos BFGOODRICH All-Terrain LT",
         "categoria": "Automotriz",
         "precioMin": 180.0,
         "precioMax": 180.0,
-        "descripcion": "4 Cauchos Usados All-Terrain LT 265/70/R17.",
+        "descripcion": "4 Cauchos BFGOODRICH All-Terrain LT 265/70/R17.",
         "especificaciones": "; Ancho de sección: 265 mm; Relación de aspecto: 70%; Diámetro del rin: 17 pulgadas; Índice de velocidad: \"Q\", velocidad máxima de hasta 160 km/h; Consideraciones: Al ser un neumático \"LT\" (Light Truck), está diseñado para vehículos de carga ligera y camionetas, y suele tener una construcción más robusta",
         "nuevo": false,
         "imageCount": 3,
@@ -620,5 +620,4 @@
         ],
         "vendido": false
     }
-
 ]
