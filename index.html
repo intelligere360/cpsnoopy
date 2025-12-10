@@ -143,29 +143,38 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script src="js/local-config.js"></script>
+    <script src="./js/version-manager.js"></script>
+    <script src="./js/local-config.js"></script>
     <script src="./js/notifications-helper.js"></script>
     <script src="./js/app.js"></script>
     <script>
-        // En index.html - registro del Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                // ✅ SW AUTOCONTENIDO - NO DEPENDE DE VARIABLES EXTERNAS
-                navigator.serviceWorker.register('./sw.js')
+                navigator.serviceWorker.register('./sw.js?v=' + (new Date().getTime()))
                 .then(function(registration) {
                     console.log('✅ Service Worker registrado:', registration.scope);
-                    // Verificar si hay una nueva versión
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        console.log('🔄 Nueva versión del Service Worker encontrada');
+                    
+                    // Escuchar mensajes del Service Worker
+                    navigator.serviceWorker.addEventListener('message', event => {
+                        if (event.data.type === 'VERSION_UPDATED') {
+                            console.log('🔄 Versión actualizada recibida:', event.data.version);
+                            mostrarNotificacion(`Versión ${event.data.version} instalada`, 'success');
+                        }
+                    });
+                    
+                    // Iniciar verificador de versiones
+                    if (window.versionManager) {
+                        window.versionManager.startPeriodicCheck();
                         
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('🔄 Nueva versión disponible. Recarga para actualizar.');
-                                // Aquí podrías mostrar un botón para recargar
+                        // Escuchar actualizaciones
+                        window.versionManager.onUpdate((newVersion, oldVersion) => {
+                            console.log(`🆕 Actualización: ${oldVersion} → ${newVersion}`);
+                            // Opcional: Forzar recarga de productos
+                            if (window.cargarProductosConPrecargaPersistente) {
+                                window.cargarProductosConPrecargaPersistente(true);
                             }
                         });
-                    });
+                    }
                 })
                 .catch(function(error) {
                     console.log('❌ Error registrando Service Worker:', error);

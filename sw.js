@@ -1,7 +1,8 @@
-// sw.js - VERSIÓN CORREGIDA PARA EVITAR ERRORES CON POST
+// sw.js - CON SISTEMA DE VERSIONADO
+const APP_VERSION = 'v2.0.0'; // Actualizar manualmente aquí también
 const CACHE_NAME = 'catalogo-peter-snoopy-local-v1.0';
-const STATIC_CACHE = 'static-catalogo-v2.0';
-const DYNAMIC_CACHE = 'dynamic-catalogo-local-v1.0';
+const STATIC_CACHE = `static-catalogo-peter-snoopy-${APP_VERSION}`;
+const DYNAMIC_CACHE = `dynamic-catalogo-peter-snoopy-${APP_VERSION}`;
 const APP_SHELL = [
   './',
   './index.html', 
@@ -9,6 +10,7 @@ const APP_SHELL = [
   './js/app.js',
   './js/local-config.js',
   './js/notifications-helper.js',
+  './js/version-manager.js',
   './manifest.json',
   './images/icon-192.png',
   './images/icon-512.png',
@@ -21,7 +23,7 @@ const APP_SHELL = [
 
 // Instalación - Cachear recursos estáticos
 self.addEventListener('install', e => {
-    console.log('🔄 Service Worker instalando (versión local)...');
+    console.log(`🔄 Service Worker ${APP_VERSION} instalando...`);
     
     e.waitUntil(
         caches.open(STATIC_CACHE)
@@ -38,13 +40,14 @@ self.addEventListener('install', e => {
 
 // Activar y limpiar caches viejos
 self.addEventListener('activate', e => {
-    console.log('🔄 Service Worker activado (versión local)');
+    console.log(`🔄 Service Worker ${APP_VERSION} activado`);
     
     e.waitUntil(
         caches.keys().then(keys => {
             return Promise.all(
                 keys.map(key => {
-                    if (key !== STATIC_CACHE && key !== DYNAMIC_CACHE) {
+                    // Eliminar todas las caches excepto las de la versión actual
+                    if (!key.includes(APP_VERSION)) {
                         console.log('🗑️ Eliminando cache vieja:', key);
                         return caches.delete(key);
                     }
@@ -56,6 +59,63 @@ self.addEventListener('activate', e => {
         })
     );
 });
+
+// Interceptar mensajes sobre nuevas versiones
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'NEW_VERSION') {
+        console.log(`🆕 Nueva versión recibida: ${event.data.version}`);
+        
+        // Opcional: Actualizar cache de recursos estáticos
+        event.waitUntil(
+            updateStaticCache(event.data.version)
+        );
+    }
+});
+
+// Función para actualizar cache estático
+async function updateStaticCache(newVersion) {
+    try {
+        const cache = await caches.open(STATIC_CACHE);
+        
+        // Actualizar recursos críticos
+        const resourcesToUpdate = [
+            './index.html',
+            './js/app.js',
+            './js/local-config.js',
+            './js/notifications-helper.js',
+            './js/version-manager.js',
+            './data/config.json',
+            './data/productos.json'
+        ];
+        
+        const updatePromises = resourcesToUpdate.map(resource => {
+            return fetch(resource, { cache: 'no-store' })
+                .then(response => {
+                    if (response.ok) {
+                        return cache.put(resource, response);
+                    }
+                })
+                .catch(err => {
+                    console.warn(`⚠️ Error actualizando ${resource}:`, err);
+                });
+        });
+        
+        await Promise.all(updatePromises);
+        console.log('✅ Cache estático actualizado para versión', newVersion);
+        
+        // Notificar a todos los clientes
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+            client.postMessage({
+                type: 'VERSION_UPDATED',
+                version: newVersion
+            });
+        });
+        
+    } catch (error) {
+        console.error('❌ Error actualizando cache:', error);
+    }
+}
 
 // Estrategia de cache: Cache First, Network Fallback
 self.addEventListener('fetch', e => {
@@ -157,43 +217,6 @@ self.addEventListener('fetch', e => {
                                 return caches.match('./index.html');
                             }
                         });
-                })
-        );
-    }
-});
-
-// Mensajes para precarga
-self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'PRECACHE_IMAGES') {
-        const urls = event.data.urls;
-        console.log('📥 Precargando imágenes en Service Worker:', urls.length);
-        
-        event.waitUntil(
-            caches.open(DYNAMIC_CACHE)
-                .then(cache => {
-                    const cachePromises = urls.map(url => {
-                        // ✅ NUEVO: Solo precachear imágenes locales (no externas)
-                        if (!url.includes('/data/productos/') && !url.startsWith('./')) {
-                            console.log('⏩ Saltando precache de imagen externa:', url);
-                            return Promise.resolve();
-                        }
-                        
-                        return fetch(url, { mode: 'cors' }) // Cambiar de 'no-cors' a 'cors'
-                            .then(response => {
-                                if (response.ok) {
-                                    return cache.put(url, response);
-                                } else {
-                                    console.warn('❌ Respuesta no OK para:', url, response.status);
-                                }
-                            })
-                            .catch(err => {
-                                console.warn('❌ Error cacheando imagen:', url, err);
-                            });
-                    });
-                    return Promise.all(cachePromises);
-                })
-                .then(() => {
-                    console.log('✅ Precarga de imágenes completada');
                 })
         );
     }

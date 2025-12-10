@@ -1,0 +1,9 @@
+Cuando actualices los archivos en GitHub:
+
+Incrementa version en config.json
+
+Actualiza version_code (fecha y revisión)
+
+Actualiza APP_VERSION en sw.js
+
+Sube los cambios

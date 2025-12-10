@@ -113,35 +113,6 @@ if (isIOS) {
     document.documentElement.classList.add('ios-device');
 }
 /**
- * Carga la configuración desde config.json
- */
-async function cargarConfiguracion() {
-    try {
-        console.log('⚙️ Cargando configuración...');
-        
-        // Intentar cargar desde Google Drive
-        const configData = await getLocalJson(LOCAL_CONFIG.CONFIG_JSON);
-        
-        // Verificar estructura del archivo
-        if (configData && typeof configData === 'object') {
-            // Si es un objeto directo
-            AppState.config = { ...AppState.config, ...configData };
-            console.log('✅ Configuración local cargada:', AppState.config);
-        } else if (Array.isArray(configData) && configData.length > 0) {
-            // Si es un array (compatibilidad)
-            AppState.config = { ...AppState.config, ...configData[0] };
-            console.log('✅ Configuración local cargada desde array:', AppState.config);
-        }
-        
-        // Guardar en cache local
-        guardarConfigCache(AppState.config);
-        
-    } catch (error) {
-        console.warn('❌ Error cargando configuración local, usando cache o valores por defecto:', error);
-        await cargarConfigDesdeCache();
-    }
-}
-/**
  * Guarda la configuración en cache local
  */
 function guardarConfigCache(config) {
@@ -1681,14 +1652,20 @@ function formatearEspecificaciones(especificaciones) {
 // =============================================
 document.addEventListener('DOMContentLoaded', async function() {
     try {
+        // 0. Iniciar verificador de actualizaciones
+        if (window.LocalConfig && window.LocalConfig.startUpdateChecker) {
+            window.LocalConfig.startUpdateChecker();
+        }
+        
         // 1. Registrar Service Worker PRIMERO
         // esta en index.html
         await obtenerTodaInfoDispositivo();       
+        
         // 2. Configurar modo App/APK
         configurarModoApp();
         
-        // ✅ NUEVO: 3. Cargar configuración primero
-        await cargarConfiguracion();
+        // 3. Cargar configuración con control de versión
+        await cargarConfiguracionConVersion();
         
         // 4. Inicializar EmailJS
         if (typeof emailjs !== 'undefined') {
@@ -1716,6 +1693,60 @@ document.addEventListener('DOMContentLoaded', async function() {
         mostrarNotificacion('Error al cargar el catálogo', 'error');
     }
 });
+
+// Nueva función para cargar configuración con control de versión
+async function cargarConfiguracionConVersion() {
+    try {
+        console.log('⚙️ Cargando configuración con control de versión...');
+        
+        // Cargar configuración
+        const configData = await getLocalJson(LOCAL_CONFIG.CONFIG_JSON);
+        
+        if (configData && typeof configData === 'object') {
+            // Guardar versión actual
+            if (configData.version) {
+                AppState.currentVersion = configData.version;
+                
+                // Verificar si es una versión nueva
+                const storedVersion = localStorage.getItem('app_version_cache');
+                if (storedVersion !== configData.version) {
+                    console.log(`🆕 Nueva versión detectada: ${storedVersion} → ${configData.version}`);
+                    
+                    // Limpiar caches de datos (pero mantener imágenes)
+                    limpiarCacheDeDatos();
+                    
+                    // Forzar recarga de productos
+                    AppState.forceReload = true;
+                }
+            }
+            
+            // Actualizar configuración
+            AppState.config = { ...AppState.config, ...configData };
+            console.log('✅ Configuración cargada. Versión:', AppState.currentVersion);
+        }
+        
+        // Guardar en cache local
+        guardarConfigCache(AppState.config);
+        
+    } catch (error) {
+        console.warn('❌ Error cargando configuración:', error);
+        await cargarConfigDesdeCache();
+    }
+}
+
+// Función para limpiar cache de datos (no imágenes)
+function limpiarCacheDeDatos() {
+    try {
+        // Limpiar cache de productos pero mantener imágenes
+        localStorage.removeItem('catalogo_cache');
+        localStorage.removeItem('config_cache');
+        
+        // Mantener consultas y notificaciones
+        console.log('🧹 Cache de datos limpiada para nueva versión');
+    } catch (error) {
+        console.warn('❌ Error limpiando cache:', error);
+    }
+}
 
 function configurarEventListeners() {
     // Cerrar modal
