@@ -1,16 +1,14 @@
-[
-    {
-        "version": "2.0.0",
-        "version_code": "20251210-001",
-        "last_updated": "2025-12-10T10:30:00Z",
-        "force_update": false,
-        "mostrar_precios": false,
-        "idioma": "es",
-        "contacto": {
-            "telefono": "+584126597297",
-            "whatsapp": "584126597297",
-            "email": "ramonsimancas61@gmail.com",
-            "vendedor": "Peter Snoopy: DE TODO UN POCO"
-        }
+{
+    "version": "2.0.0",
+    "version_code": "20251210-001",
+    "last_updated": "2025-12-10T10:30:00Z",
+    "force_update": false,
+    "mostrar_precios": false,
+    "idioma": "es",
+    "contacto": {
+        "telefono": "+584126597297",
+        "whatsapp": "584126597297",
+        "email": "ramonsimancas61@gmail.com",
+        "vendedor": "Peter Snoopy: DE TODO UN POCO"
     }
-]
+}
