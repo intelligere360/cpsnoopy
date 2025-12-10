@@ -19,30 +19,45 @@ const LOCAL_CONFIG = {
 async function checkForUpdates() {
     try {
         const currentVersion = localStorage.getItem(LOCAL_CONFIG.VERSION_KEY);
-        const response = await fetch(`${LOCAL_CONFIG.DATA_PATH}${LOCAL_CONFIG.CONFIG_JSON}?t=${Date.now()}`);
+        // ✅ AÑADIR headers para evitar cache
+        const response = await fetch(`${LOCAL_CONFIG.DATA_PATH}${LOCAL_CONFIG.CONFIG_JSON}?_=${Date.now()}`, {
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
         
-        if (!response.ok) return false;
+        if (!response.ok) {
+            console.warn('❌ No se pudo cargar config.json');
+            return false;
+        }
         
         const config = await response.json();
-        const newVersion = config.version;
+        
+        // ✅ VERIFICAR QUE LA VERSIÓN EXISTA
+        if (!config.version) {
+            console.error('❌ config.json no tiene propiedad "version"');
+            return false;
+        }
+
+        const newVersion = config.version.toString(); // Convertir a string
+
+        console.log(`🔍 Verificando versión: Actual=${currentVersion || 'ninguna'}, Nueva=${newVersion}`);
         
         // Si no hay versión guardada o hay nueva versión
         if (!currentVersion || currentVersion !== newVersion) {
             console.log(`🔄 Nueva versión detectada: ${currentVersion || 'ninguna'} → ${newVersion}`);
             
-            // Guardar nueva versión
+            // ✅ GUARDAR ANTES DE NOTIFICAR
             localStorage.setItem(LOCAL_CONFIG.VERSION_KEY, newVersion);
-            
-            // Guardar información de la versión
-            localStorage.setItem('app_version_info', JSON.stringify({
-                version: newVersion,
-                version_code: config.version_code,
-                last_updated: config.last_updated,
-                updated_at: new Date().toISOString()
-            }));
             
             // Notificar al Service Worker
             notifyServiceWorkerUpdate(newVersion);
+            
+            // ✅ MOSTRAR NOTIFICACIÓN UNA SOLA VEZ
+            setTimeout(() => {
+                mostrarNotificacionUnaVez(`🔄 Nueva versión ${newVersion} disponible. Recargando...`, 'info', newVersion);
+            }, 1000);
             
             return true;
         }
@@ -51,6 +66,31 @@ async function checkForUpdates() {
     } catch (error) {
         console.warn('❌ Error verificando actualizaciones:', error);
         return false;
+    }
+}
+
+// ✅ NUEVA FUNCIÓN: Mostrar notificación solo una vez por versión
+function mostrarNotificacionUnaVez(mensaje, tipo, version) {
+    const lastNotifiedVersion = localStorage.getItem('last_notified_version');
+    
+    if (lastNotifiedVersion === version) {
+        console.log(`⏩ Ya se notificó versión ${version}, omitiendo...`);
+        return;
+    }
+    
+    mostrarNotificacion(mensaje, tipo);
+    
+    // Guardar que ya notificamos esta versión
+    localStorage.setItem('last_notified_version', version);
+    
+    // ✅ RECARGAR SOLO DESPUÉS DE 5 SEGUNDOS, UNA SOLA VEZ
+    const reloadKey = `reloaded_${version}`;
+    if (!localStorage.getItem(reloadKey)) {
+        setTimeout(() => {
+            console.log(`🔄 Recargando para versión ${version}...`);
+            localStorage.setItem(reloadKey, 'true');
+            window.location.reload();
+        }, 5000);
     }
 }
 
@@ -65,17 +105,30 @@ function notifyServiceWorkerUpdate(version) {
     }
 }
 
-// Verificar actualizaciones periódicamente
+// Verificar actualizaciones periódicamente - VERSIÓN MEJORADA
 function startUpdateChecker() {
-    // Verificar inmediatamente al cargar
-    setTimeout(() => checkForUpdates(), 5000);
+    // ✅ VERIFICAR INMEDIATAMENTE SOLO SI NO SE HA HECHO HOY
+    const lastCheck = localStorage.getItem('last_update_check');
+    const today = new Date().toISOString().split('T')[0]; // Solo fecha
     
-    // Verificar periódicamente
-    setInterval(checkForUpdates, LOCAL_CONFIG.CHECK_INTERVAL);
+    if (lastCheck !== today) {
+        setTimeout(() => {
+            console.log('🔍 Verificando actualizaciones...');
+            checkForUpdates();
+            localStorage.setItem('last_update_check', today);
+        }, 10000); // Esperar 10 segundos después de cargar
+    }
+    
+    // ✅ VERIFICAR CADA 4 HORAS, NO CADA 1 HORA
+    setInterval(() => {
+        console.log('🕐 Verificación periódica de actualizaciones...');
+        checkForUpdates();
+    }, 4 * 60 * 60 * 1000); // 4 horas
     
     // Verificar cuando la app vuelve a estar online
     window.addEventListener('online', () => {
-        setTimeout(checkForUpdates, 2000);
+        console.log('🌐 Conectado, verificando actualizaciones...');
+        setTimeout(checkForUpdates, 5000);
     });
 }
 

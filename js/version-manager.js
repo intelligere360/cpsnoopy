@@ -5,21 +5,51 @@ class VersionManager {
         this.updateListeners = [];
     }
     
-    // Verificar actualizaciones
+    // En version-manager.js - VERSIÓN CORREGIDA
     async checkUpdate() {
         try {
-            const response = await fetch('./data/config.json?t=' + Date.now());
+            const response = await fetch('./data/config.json?_=' + Date.now(), {
+                cache: 'no-store'
+            });
+            
+            if (!response.ok) {
+                console.error('❌ No se pudo cargar config.json');
+                return { hasUpdate: false, error: 'No se pudo cargar' };
+            }
+            
             const config = await response.json();
-            const newVersion = config.version;
             
-            const storedVersion = localStorage.getItem('app_version');
+            // ✅ VERIFICACIÓN CRÍTICA
+            if (!config || typeof config !== 'object' || !config.version) {
+                console.error('❌ config.json inválido o sin versión');
+                return { hasUpdate: false, error: 'Config inválido' };
+            }
             
-            if (storedVersion !== newVersion) {
-                this.currentVersion = newVersion;
+            const newVersion = config.version.toString().trim();
+            const storedVersion = localStorage.getItem('app_version') || '';
+            
+            console.log(`🔍 Versión almacenada: "${storedVersion}", Nueva: "${newVersion}"`);
+            
+            // ✅ SOLO NOTIFICAR SI REALMENTE HAY CAMBIO
+            if (storedVersion && storedVersion === newVersion) {
+                console.log('✅ Versión actual, sin cambios');
+                return { hasUpdate: false };
+            }
+            
+            if (!storedVersion || storedVersion !== newVersion) {
+                console.log(`🔄 Cambio de versión: "${storedVersion}" → "${newVersion}"`);
+                
+                // ✅ GUARDAR Y NOTIFICAR
                 localStorage.setItem('app_version', newVersion);
                 localStorage.setItem('app_last_check', Date.now());
                 
-                this.notifyUpdate(newVersion, storedVersion);
+                // ✅ PREVENIR NOTIFICACIONES MÚLTIPLES
+                const alreadyNotified = localStorage.getItem(`notified_${newVersion}`);
+                if (!alreadyNotified) {
+                    this.notifyUpdate(newVersion, storedVersion);
+                    localStorage.setItem(`notified_${newVersion}`, 'true');
+                }
+                
                 return {
                     hasUpdate: true,
                     oldVersion: storedVersion,
@@ -30,7 +60,7 @@ class VersionManager {
             
             return { hasUpdate: false };
         } catch (error) {
-            console.error('Error checking version:', error);
+            console.error('❌ Error verificando versión:', error);
             return { hasUpdate: false, error: error.message };
         }
     }
