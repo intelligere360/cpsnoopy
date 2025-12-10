@@ -547,11 +547,11 @@
     },
     {
         "id": 22,
-        "nombre": "Lavabo con pedestal",
+        "nombre": "Lavamanos con pedestal",
         "categoria": "Hogar",
         "precioMin": 20.00,
         "precioMax": 20.00,
-        "descripcion": "Lavabo con pedestal marca Corona de color melocotón o rosa vieja.",
+        "descripcion": "Lavamanos con pedestal marca Corona de color melocotón o rosa vieja.",
         "especificaciones": "; Sin válvulas o grifo; El lavabo tiene un único orificio pretaladrado para el grifo; Este estilo de conjunto de lavabo y pedestal es una opción popular para diversos diseños de baños, especialmente en espacios más pequeños",
         "nuevo": true,
         "imageCount": 1,
@@ -620,4 +620,5 @@
         ],
         "vendido": false
     }
+
 ]
