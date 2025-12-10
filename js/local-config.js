@@ -6,7 +6,7 @@ const LOCAL_CONFIG = {
     IMAGES_PATH: './data/productos/',
     
     // Archivos JSON
-    PRODUCTS_JSON: 'productos.json',
+    PRODUCTS_JSON: 'products.json',
     CONFIG_JSON: 'config.json'
 };
 
@@ -31,4 +31,5 @@ async function getLocalJson(filename) {
         console.error(`❌ Error cargando ${filename}:`, error);
         return null;
     }
+
 }
