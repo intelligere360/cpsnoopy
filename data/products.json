@@ -628,5 +628,26 @@
             }
         ],
         "vendido": false
+    },
+    {
+        "id": 24,
+        "nombre": "Máquina de coser Singer",
+        "categoria": "Hogar",
+        "precioMin": 80.00,
+        "precioMax": 80.00,
+        "descripcion": "Máquina de coser Singer modelo 5050 y marca Fashion.",
+        "especificaciones": "; Es un modelo mecánico, conocido por ser robusto y confiable, de uso doméstico; Cuenta con 50 funciones de puntada, lo que permite una amplia gama de opciones de costura creativa; La máquina está diseñada para ajustar automáticamente la tensión del hilo para lograr costuras precisas y fuertes; Voltaje: 120/220V",
+        "nuevo": false,
+        "imageCount": 1,
+        "activo": true,
+        "imagenes": [
+            { 
+                "id": "1SxGUzbPLWmGMSB5eF4SbSqWvU27nkRRr",
+                "nombre": "24_1.jpg",
+                "principal": true,
+                "orden": 1
+            }
+        ],
+        "vendido": false
     }
 ]
