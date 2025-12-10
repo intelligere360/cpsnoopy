@@ -1,4 +1,4 @@
-// sw.js - VERSIÓN MEJORADA PARA EVITAR ERRORES
+// sw.js - VERSIÓN CORREGIDA PARA EVITAR ERRORES CON POST
 const CACHE_NAME = 'catalogo-peter-snoopy-local-v1.0';
 const STATIC_CACHE = 'static-catalogo-v2.0';
 const DYNAMIC_CACHE = 'dynamic-catalogo-local-v1.0';
@@ -61,12 +61,32 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     const url = new URL(e.request.url);
     
-    // Ignorar solicitudes no HTTP
+    // 1. Ignorar solicitudes no HTTP
     if (!e.request.url.startsWith('http')) return;
     
-    // Para archivos de datos e imágenes, usar estrategia diferente
+    // 2. ✅ NUEVO: IGNORAR solicitudes POST (EmailJS, Google Apps Script, etc.)
+    if (e.request.method !== 'GET') {
+        console.log(`⏩ Ignorando solicitud ${e.request.method} a ${url.pathname}`);
+        return; // Dejar pasar sin cachear
+    }
+    
+    // 3. ✅ NUEVO: IGNORAR URLs de APIs externas que no queremos cachear
+    const externalApis = [
+        'emailjs.com',
+        'script.google.com',
+        'googleapis.com',
+        'wa.me',
+        'api.whatsapp.com'
+    ];
+    
+    const isExternalApi = externalApis.some(api => url.href.includes(api));
+    if (isExternalApi) {
+        console.log(`🌐 Pasando API externa sin cachear: ${url.hostname}`);
+        return fetch(e.request); // Pasar directamente sin cachear
+    }
+    
+    // 4. Para archivos de datos e imágenes locales
     if (url.pathname.includes('/data/')) {
-        // Para archivos JSON e imágenes locales
         e.respondWith(
             caches.match(e.request)
                 .then(cachedResponse => {
@@ -76,24 +96,25 @@ self.addEventListener('fetch', e => {
                         return cachedResponse;
                     }
                     
-                    // Si no está en cache, obtener de red y guardar en cache dinámica
+                    // Si no está en cache, obtener de red
                     return fetch(e.request)
                         .then(networkResponse => {
-                            // Clonar respuesta para cache y uso
-                            const responseClone = networkResponse.clone();
-                            
-                            caches.open(DYNAMIC_CACHE)
-                                .then(cache => {
-                                    cache.put(e.request, responseClone);
-                                });
-                            
+                            // ✅ NUEVO: Solo cachear si la respuesta es válida
+                            if (networkResponse.ok) {
+                                const responseClone = networkResponse.clone();
+                                caches.open(DYNAMIC_CACHE)
+                                    .then(cache => {
+                                        cache.put(e.request, responseClone)
+                                            .catch(err => {
+                                                console.warn('⚠️ Error cacheando:', url.pathname, err);
+                                            });
+                                    });
+                            }
                             return networkResponse;
                         })
                         .catch(() => {
                             // Fallback para imágenes
-                            if (url.pathname.includes('.jpg') || 
-                                url.pathname.includes('.png') || 
-                                url.pathname.includes('.webp')) {
+                            if (url.pathname.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
                                 return caches.match('./images/placeholder.jpg');
                             }
                             return new Response('Recurso no disponible', {
@@ -104,20 +125,34 @@ self.addEventListener('fetch', e => {
                 })
         );
     } else {
-        // Para otros recursos, usar estrategia estándar
+        // Para otros recursos GET
         e.respondWith(
             caches.match(e.request)
                 .then(cachedResponse => {
-                    return cachedResponse || fetch(e.request)
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    
+                    return fetch(e.request)
                         .then(networkResponse => {
-                            return caches.open(DYNAMIC_CACHE)
+                            // ✅ NUEVO: Verificar que sea cacheable
+                            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                                return networkResponse;
+                            }
+                            
+                            const responseClone = networkResponse.clone();
+                            caches.open(DYNAMIC_CACHE)
                                 .then(cache => {
-                                    cache.put(e.request, networkResponse.clone());
-                                    return networkResponse;
+                                    cache.put(e.request, responseClone)
+                                        .catch(err => {
+                                            console.warn('⚠️ No se pudo cachear:', url.pathname, err);
+                                        });
                                 });
+                            
+                            return networkResponse;
                         })
                         .catch(() => {
-                            // Fallback para página principal
+                            // Fallback para navegación
                             if (e.request.mode === 'navigate') {
                                 return caches.match('./index.html');
                             }
@@ -137,10 +172,18 @@ self.addEventListener('message', event => {
             caches.open(DYNAMIC_CACHE)
                 .then(cache => {
                     const cachePromises = urls.map(url => {
-                        return fetch(url, { mode: 'no-cors' })
+                        // ✅ NUEVO: Solo precachear imágenes locales (no externas)
+                        if (!url.includes('/data/productos/') && !url.startsWith('./')) {
+                            console.log('⏩ Saltando precache de imagen externa:', url);
+                            return Promise.resolve();
+                        }
+                        
+                        return fetch(url, { mode: 'cors' }) // Cambiar de 'no-cors' a 'cors'
                             .then(response => {
-                                if (response.ok || response.type === 'opaque') {
+                                if (response.ok) {
                                     return cache.put(url, response);
+                                } else {
+                                    console.warn('❌ Respuesta no OK para:', url, response.status);
                                 }
                             })
                             .catch(err => {
@@ -149,6 +192,18 @@ self.addEventListener('message', event => {
                     });
                     return Promise.all(cachePromises);
                 })
+                .then(() => {
+                    console.log('✅ Precarga de imágenes completada');
+                })
         );
     }
+});
+
+// Manejar errores no capturados
+self.addEventListener('error', event => {
+    console.error('❌ Error en Service Worker:', event.error);
+});
+
+self.addEventListener('unhandledrejection', event => {
+    console.error('❌ Promise rechazada en Service Worker:', event.reason);
 });
