@@ -1316,6 +1316,14 @@ function inicializarCarrusel(producto) {
         
         // Detener auto-slide cuando se maximiza
         stopAutoSlide();
+
+        // ✅ NUEVO: Agregar estado al historial para imagen maximizada
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ 
+                imageMaximized: true,
+                productId: productoActual?.id 
+            }, '', window.location.href);
+        }
         
         // Crear overlay para modo maximizado
         const overlay = document.createElement('div');
@@ -1324,6 +1332,8 @@ function inicializarCarrusel(producto) {
             <div class="maximized-container">
                 <img src="${imgElement.src}" alt="${imgElement.alt}" class="maximized-image">
                 <button class="maximized-close">×</button>
+                <!-- ✅ NUEVO: Indicador para móviles -->
+                <div class="maximized-hint">Toca fuera o usa el botón atrás para cerrar</div>
             </div>
         `;
         
@@ -1459,6 +1469,18 @@ function inicializarCarrusel(producto) {
                 e.preventDefault();
             }
             lastTap = currentTime;
+        });
+
+        // ✅ NUEVO: Configurar botón close para manejar historial
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Si estamos en el historial de imagen maximizada, retroceder
+            if (window.history.state && window.history.state.imageMaximized) {
+                window.history.back();
+            }
+            
+            closeMaximizedMode();
         });
 
         // Prevenir scroll del body
@@ -1671,6 +1693,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // 6. Configurar eventos básicos
         configurarManejoBotonBack();
+        setupBackButtonStateMachine(); // ✅ NUEVO
         inicializarManejoHistorial();
         configurarEventListeners();
         //... específica para PWA/TWA
@@ -2427,14 +2450,26 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
 // =============================================
 
 /**
- * Configura el manejo del botón back/backspace para móviles
+ * Configura el manejo del botón back/backspace para móviles - VERSIÓN MEJORADA
  */
 function configurarManejoBotonBack() {
     let backPressed = false;
+    let backPressTimeout = null;
     
     // 1. Manejar evento popstate (cuando se presiona back en navegador)
     window.addEventListener('popstate', function(event) {
         console.log('🔙 Botón back detectado (popstate)');
+        
+        // ✅ NUEVO: Primero verificar si hay imagen maximizada
+        const maximizedOverlay = document.querySelector('.maximized-overlay');
+        if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
+            console.log('🖼️ Imagen maximizada detectada, cerrando...');
+            event.preventDefault();
+            event.stopPropagation();
+            
+            cerrarImagenMaximizada();
+            return false;
+        }
         
         // Si hay un modal abierto, cerrarlo en lugar de navegar
         const modal = document.getElementById('productModal');
@@ -2456,7 +2491,10 @@ function configurarManejoBotonBack() {
                 
                 mostrarNotificacion('Presiona de nuevo para salir de la app', 'info');
                 
-                setTimeout(() => {
+                // Limpiar timeout anterior si existe
+                if (backPressTimeout) clearTimeout(backPressTimeout);
+                
+                backPressTimeout = setTimeout(() => {
                     backPressed = false;
                 }, 2000);
                 
@@ -2465,12 +2503,23 @@ function configurarManejoBotonBack() {
         }
     });
     
-    // 2. Manejar tecla Backspace (escritorio)
+    // 2. Manejar tecla Backspace (escritorio) - VERSIÓN MEJORADA
     document.addEventListener('keydown', function(e) {
         // Backspace o Escape
         if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 8 || e.keyCode === 27) {
-            const modal = document.getElementById('productModal');
+            // ✅ NUEVO: Primero verificar imagen maximizada
+            const maximizedOverlay = document.querySelector('.maximized-overlay');
+            if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('⌨️ Tecla Backspace/Escape detectada, cerrando imagen maximizada');
+                cerrarImagenMaximizada();
+                return;
+            }
             
+            // Luego verificar modal
+            const modal = document.getElementById('productModal');
             if (modal && modal.style.display === 'block') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -2481,16 +2530,40 @@ function configurarManejoBotonBack() {
         }
     });
     
-    // 3. Manejar gestos swipe back en iOS/Android
+    // 3. Manejar gestos swipe back en iOS/Android - VERSIÓN MEJORADA
     let touchStartX = 0;
     let touchStartY = 0;
+    let isInMaximizedMode = false;
     
     document.addEventListener('touchstart', function(e) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
+        // ✅ NUEVO: Verificar si estamos en modo imagen maximizada
+        const maximizedOverlay = document.querySelector('.maximized-overlay');
+        isInMaximizedMode = maximizedOverlay && maximizedOverlay.classList.contains('active');
+        
+        if (!isInMaximizedMode) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
     }, { passive: true });
     
     document.addEventListener('touchend', function(e) {
+        if (isInMaximizedMode) {
+            // ✅ NUEVO: En modo imagen maximizada, manejar swipe back diferente
+            const touchEndX = e.changedTouches[0].clientX;
+            const diffX = touchStartX - touchEndX;
+            
+            if (diffX > 100) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('👆 Swipe back detectado en imagen maximizada');
+                cerrarImagenMaximizada();
+            }
+            
+            isInMaximizedMode = false;
+            return;
+        }
+        
         if (!touchStartX) return;
         
         const touchEndX = e.changedTouches[0].clientX;
@@ -2517,9 +2590,41 @@ function configurarManejoBotonBack() {
     }, { passive: false });
 }
 /**
+ * Cierra la imagen maximizada
+ */
+function cerrarImagenMaximizada() {
+    const maximizedOverlay = document.querySelector('.maximized-overlay');
+    
+    if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
+        // Simular clic en el botón de cerrar
+        const closeBtn = maximizedOverlay.querySelector('.maximized-close');
+        if (closeBtn) {
+            closeBtn.click();
+        } else {
+            // Fallback: quitar la clase active para desvanecer
+            maximizedOverlay.classList.remove('active');
+            setTimeout(() => {
+                if (maximizedOverlay.parentNode) {
+                    maximizedOverlay.parentNode.removeChild(maximizedOverlay);
+                }
+                document.body.style.overflow = '';
+            }, 300);
+        }
+        console.log('✅ Imagen maximizada cerrada mediante botón back');
+    }
+}
+/**
  * Cierra el modal y restaura el estado del historial
  */
 function cerrarModalYRestaurarEstado() {
+    // ✅ NUEVO: Primero verificar si hay imagen maximizada
+    const maximizedOverlay = document.querySelector('.maximized-overlay');
+    if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
+        console.log('⚠️ Hay imagen maximizada abierta, cerrándola primero');
+        cerrarImagenMaximizada();
+        return; // Salir, el próximo back cerrará el modal
+    }
+    
     const modal = document.getElementById('productModal');
     
     if (modal && modal.style.display === 'block') {
@@ -2530,7 +2635,7 @@ function cerrarModalYRestaurarEstado() {
         document.body.style.overflow = 'auto';
         
         // Notificar al usuario
-        console.log('Modal cerrado', 'info');
+        mostrarNotificacion('Vista de producto cerrada', 'info');
         
         // Agregar una entrada al historial para prevenir salir
         if (window.history && window.history.pushState) {
@@ -2633,5 +2738,65 @@ function configurarBackButtonPWA() {
         
         console.log('📱 Botón back de Android configurado para TWA');
     }
+}
 
+// Función para manejar estados
+function setupBackButtonStateMachine() {
+    let state = {
+        isModalOpen: false,
+        isImageMaximized: false,
+        backPressCount: 0
+    };
+    
+    window.addEventListener('popstate', function(event) {
+        console.log('🔙 Estado actual:', state);
+        
+        // Verificar imagen maximizada
+        const maximizedOverlay = document.querySelector('.maximized-overlay');
+        state.isImageMaximized = maximizedOverlay && maximizedOverlay.classList.contains('active');
+        
+        // Verificar modal
+        const modal = document.getElementById('productModal');
+        state.isModalOpen = modal && modal.style.display === 'block';
+        
+        // Máquina de estados para botón back
+        if (state.isImageMaximized) {
+            event.preventDefault();
+            cerrarImagenMaximizada();
+            state.backPressCount = 1;
+        } 
+        else if (state.isModalOpen) {
+            event.preventDefault();
+            cerrarModalYRestaurarEstado();
+            state.backPressCount = 2;
+        }
+        else {
+            // Nada abierto, manejar salida de app
+            state.backPressCount++;
+            
+            if (state.backPressCount === 1) {
+                event.preventDefault();
+                mostrarNotificacion('Presiona de nuevo para salir', 'info');
+                
+                setTimeout(() => {
+                    state.backPressCount = 0;
+                }, 2000);
+            }
+            // Si state.backPressCount === 2, dejar que se cierre
+        }
+    });
+    
+    // Monitorear cambios en la UI
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.target.id === 'productModal') {
+                state.isModalOpen = mutation.target.style.display === 'block';
+            }
+        });
+    });
+    
+    const modal = document.getElementById('productModal');
+    if (modal) {
+        observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+    }
 }

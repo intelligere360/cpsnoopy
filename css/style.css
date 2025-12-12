@@ -836,28 +836,6 @@ footer {
     cursor: grabbing;
 }
 
-.maximized-close {
-    position: absolute;
-    top: -40px;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 10001;
-    pointer-events: auto;
-    transition: all 0.3s ease;
-}
-
-.maximized-close:hover {
-    background: rgba(0, 0, 0, 0.9);
-    transform: scale(1.1);
-}
-
 /* Responsive para modo maximizado */
 @media (max-width: 768px) {
     .maximized-image {
@@ -1822,5 +1800,101 @@ input, textarea {
     
     .modal-actions .contact-text {
         font-size: 11px;
+    }
+}
+
+/* ============================================= */
+/* MEJORAS PARA IMAGEN MAXIMIZADA EN MÓVILES */
+/* ============================================= */
+
+.maximized-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    animation: fadeInHint 0.5s ease;
+    z-index: 10002;
+    pointer-events: none;
+}
+
+@keyframes fadeInHint {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ocultar hint después de unos segundos */
+.maximized-hint {
+    animation: fadeInOutHint 5s forwards;
+}
+
+@keyframes fadeInOutHint {
+    0% { opacity: 0; transform: translateY(20px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(20px); }
+}
+
+/* Mejorar botón de cerrar en imagen maximizada */
+.maximized-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.maximized-close:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+/* Para móviles */
+@media (max-width: 768px) {
+    .maximized-hint {
+        font-size: 12px;
+        padding: 8px;
+        bottom: 15px;
+    }
+    
+    .maximized-close {
+        top: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .maximized-hint {
+        font-size: 11px;
+        padding: 6px;
+        bottom: 10px;
+    }
+    
+    .maximized-close {
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
     }
 }
