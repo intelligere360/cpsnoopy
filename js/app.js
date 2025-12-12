@@ -828,7 +828,19 @@ async function mostrarDetallesProducto(productoId) {
     // ✅ NUEVO: Configurar todos los botones de contacto
     configurarBotonesContacto(producto, str_precio_saber);
 
+    // ✅ NUEVO: Manipular historial cuando se abre el modal
+    if (window.history && window.history.pushState) {
+        window.history.pushState({ 
+            modalOpen: true, 
+            productId: producto.id,
+            productName: producto.nombre 
+        }, '', window.location.href);
+    }
+
     document.getElementById('productModal').style.display = 'block';
+
+    // ✅ NUEVO: Prevenir scroll del body
+    document.body.style.overflow = 'hidden';
 }
 
 // ✅ FUNCIÓN MEJORADA: Configurar todos los botones de contacto
@@ -1484,24 +1496,6 @@ function inicializarCarrusel(producto) {
         currentMaximizedOverlay = null;
     }
 
-    // Toggle zoom en modo maximizado
-    function toggleZoom() {
-        const maximizedImg = document.querySelector('.maximized-image');
-        if (!maximizedImg) return;
-        
-        if (!isZoomed) {
-            // Activar zoom
-            maximizedImg.classList.add('zoomed');
-            isZoomed = true;
-            console.log('🔍 Zoom activado');
-        } else {
-            // Desactivar zoom
-            maximizedImg.classList.remove('zoomed');
-            isZoomed = false;
-            console.log('🔍 Zoom desactivado');
-        }
-    }
-
     // 🆕 CORRECCIÓN: Asegurar que los botones de navegación sean visibles
     function actualizarVisibilidadBotones() {
         if (prevBtn && nextBtn) {
@@ -1676,7 +1670,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         await cargarProductosConPrecargaPersistente();
         
         // 6. Configurar eventos básicos
+        configurarManejoBotonBack();
+        inicializarManejoHistorial();
         configurarEventListeners();
+        //... específica para PWA/TWA
+        configurarBackButtonPWA();
             
         // 8. Configurar detección de conexión
         configurarDeteccionConexion();
@@ -1750,16 +1748,7 @@ function limpiarCacheDeDatos() {
 
 function configurarEventListeners() {
     // Cerrar modal
-    document.querySelector('.close').addEventListener('click', () => {
-        document.getElementById('productModal').style.display = 'none';
-    });
-    
-    // Cerrar modal al hacer clic fuera
-    window.addEventListener('click', (event) => {
-        if (event.target === document.getElementById('productModal')) {
-            document.getElementById('productModal').style.display = 'none';
-        }
-    });
+    configurarCierreModal();
     
     // Búsqueda
     const searchInput = document.getElementById('searchInput');
@@ -2430,5 +2419,218 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
         console.error('❌ Error cargando productos:', error);
         ocultarLoaderRapido();
         await cargarDesdeCache();
+    }
+}
+
+// =============================================
+// SISTEMA DE MANEJO DEL BOTÓN BACK/BACKSPACE
+// =============================================
+
+/**
+ * Configura el manejo del botón back/backspace para móviles
+ */
+function configurarManejoBotonBack() {
+    let backPressed = false;
+    
+    // 1. Manejar evento popstate (cuando se presiona back en navegador)
+    window.addEventListener('popstate', function(event) {
+        console.log('🔙 Botón back detectado (popstate)');
+        
+        // Si hay un modal abierto, cerrarlo en lugar de navegar
+        const modal = document.getElementById('productModal');
+        if (modal && modal.style.display === 'block') {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            cerrarModalYRestaurarEstado();
+            return false;
+        }
+        
+        // Si estamos en modo standalone (PWA), evitar salir
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            
+            if (!backPressed) {
+                event.preventDefault();
+                backPressed = true;
+                
+                mostrarNotificacion('Presiona de nuevo para salir de la app', 'info');
+                
+                setTimeout(() => {
+                    backPressed = false;
+                }, 2000);
+                
+                return false;
+            }
+        }
+    });
+    
+    // 2. Manejar tecla Backspace (escritorio)
+    document.addEventListener('keydown', function(e) {
+        // Backspace o Escape
+        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 8 || e.keyCode === 27) {
+            const modal = document.getElementById('productModal');
+            
+            if (modal && modal.style.display === 'block') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('⌨️ Tecla Backspace/Escape detectada, cerrando modal');
+                cerrarModalYRestaurarEstado();
+            }
+        }
+    });
+    
+    // 3. Manejar gestos swipe back en iOS/Android
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchend', function(e) {
+        if (!touchStartX) return;
+        
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const diffX = touchStartX - touchEndX;
+        const diffY = Math.abs(touchStartY - touchEndY);
+        
+        // Detectar swipe desde el borde izquierdo (gesto típico de "back" en iOS/Android)
+        if (touchStartX < 50 && diffX > 100 && diffY < 50) {
+            const modal = document.getElementById('productModal');
+            
+            if (modal && modal.style.display === 'block') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('👆 Swipe back detectado desde borde izquierdo');
+                cerrarModalYRestaurarEstado();
+            }
+        }
+        
+        touchStartX = 0;
+        touchStartY = 0;
+    }, { passive: false });
+}
+/**
+ * Cierra el modal y restaura el estado del historial
+ */
+function cerrarModalYRestaurarEstado() {
+    const modal = document.getElementById('productModal');
+    
+    if (modal && modal.style.display === 'block') {
+        // Cerrar el modal
+        modal.style.display = 'none';
+        
+        // Restaurar scroll del body
+        document.body.style.overflow = 'auto';
+        
+        // Notificar al usuario
+        mostrarNotificacion('Modal cerrado', 'info');
+        
+        // Agregar una entrada al historial para prevenir salir
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ modalClosed: true }, '', window.location.href);
+        }
+        
+        console.log('✅ Modal cerrado mediante botón back');
+    }
+}
+/**
+ * Inicializa el sistema de manejo de historial
+ */
+function inicializarManejoHistorial() {
+    // Agregar estado inicial al historial
+    if (window.history && window.history.pushState) {
+        window.history.replaceState({ page: 'catalogo' }, '', window.location.href);
+    }
+    
+    // Escuchar cambios en la visibilidad del modal para manejar historial
+    observarCambiosModal();
+}
+/**
+ * Observa cambios en el modal para manipular el historial
+ */
+function observarCambiosModal() {
+    const modal = document.getElementById('productModal');
+    
+    if (!modal) return;
+    
+    // Usar MutationObserver para detectar cuando se abre el modal
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'style') {
+                const isModalOpen = modal.style.display === 'block';
+                
+                if (isModalOpen && window.history && window.history.pushState) {
+                    // Cuando se abre el modal, agregar una entrada al historial
+                    window.history.pushState({ modalOpen: true, productId: AppState.productoActual?.id }, '');
+                    console.log('📝 Entrada agregada al historial para modal abierto');
+                }
+            }
+        });
+    });
+    
+    observer.observe(modal, { attributes: true });
+}
+// Reemplazar la función de cierre existente o modificar el event listener
+function configurarCierreModal() {
+    // Cerrar modal con el botón X
+    document.querySelector('.close').addEventListener('click', () => {
+        cerrarModalCompleto();
+    });
+    
+    // Cerrar modal al hacer clic fuera
+    window.addEventListener('click', (event) => {
+        if (event.target === document.getElementById('productModal')) {
+            cerrarModalCompleto();
+        }
+    });
+}
+/**
+ * Cierra el modal de manera completa
+ */
+function cerrarModalCompleto() {
+    const modal = document.getElementById('productModal');
+    
+    if (modal && modal.style.display === 'block') {
+        modal.style.display = 'none';
+        
+        // Restaurar scroll
+        document.body.style.overflow = 'auto';
+        
+        // Si estamos en el historial del modal, retroceder
+        if (window.history.state && window.history.state.modalOpen) {
+            window.history.back();
+        }
+        
+        console.log('✅ Modal cerrado normalmente');
+    }
+}
+// Función específica para PWA/TWA
+function configurarBackButtonPWA() {
+    // Detectar si estamos en una WebView/Trusted Web Activity
+    const isTWA = window.matchMedia('(display-mode: standalone)').matches && 
+                  /android/i.test(navigator.userAgent);
+    
+    if (isTWA && window.Android && window.Android.onBackPressed) {
+        // Integración con Android back button para TWA
+        window.Android.onBackPressed = function() {
+            const modal = document.getElementById('productModal');
+            
+            if (modal && modal.style.display === 'block') {
+                cerrarModalCompleto();
+                return true; // Indicar que manejamos el evento
+            }
+            
+            // Si no hay modal, usar el comportamiento por defecto (salir)
+            return false;
+        };
+        
+        console.log('📱 Botón back de Android configurado para TWA');
     }
 }
