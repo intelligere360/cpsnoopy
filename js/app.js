@@ -90,6 +90,13 @@ const AppState = {
         mostrar_precios: false, // Valor por defecto
         version: "1.0.0",
         idioma: "es"
+    },
+    // ✅ NUEVO: Sistema de estado de navegación
+    navigationState: {
+        level: 'list', // 'list' | 'modal' | 'image'
+        productId: null,
+        imageIndex: null,
+        backPressCount: 0
     }
 };
 
@@ -561,7 +568,13 @@ async function enviarNotificacionEmail(data) {
     }
 }
 
-function mostrarNotificacion(mensaje, tipo = 'info') {
+function mostrarNotificacion(mensaje, tipo = 'info', duracion = 3000) {
+    // Evitar múltiples notificaciones simultáneas
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        notification.remove();
+    });
+    
     const notification = document.createElement('div');
     notification.className = `notification ${tipo}`;
     notification.textContent = mensaje;
@@ -576,6 +589,8 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         z-index: 10000;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         animation: slideInRight 0.3s ease;
+        max-width: 300px;
+        word-wrap: break-word;
     `;
     
     document.body.appendChild(notification);
@@ -583,7 +598,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, duracion);
 }
 
 // =============================================
@@ -841,6 +856,15 @@ async function mostrarDetallesProducto(productoId) {
 
     // ✅ NUEVO: Prevenir scroll del body
     document.body.style.overflow = 'hidden';
+
+    // ✅ NUEVO: Actualizar estado de navegación
+    AppState.navigationState.level = 'modal';
+    AppState.navigationState.productId = productoId;
+    
+    document.getElementById('productModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    console.log('📍 Navegación: list → modal');
 }
 
 // ✅ FUNCIÓN MEJORADA: Configurar todos los botones de contacto
@@ -1516,6 +1540,13 @@ function inicializarCarrusel(producto) {
         document.body.style.overflow = '';
         currentMaximizedImage = null;
         currentMaximizedOverlay = null;
+
+        // ✅ NUEVO: Actualizar estado de navegación
+        setTimeout(() => {
+            if (typeof updateNavigationState === 'function') {
+                updateNavigationState();
+            }
+        }, 100);
     }
 
     // 🆕 CORRECCIÓN: Asegurar que los botones de navegación sean visibles
@@ -1634,6 +1665,16 @@ function inicializarCarrusel(producto) {
     
     // Iniciar auto-desplazamiento
     startAutoSlide();
+
+    // ✅ NUEVO: Actualizar estado de navegación
+    setTimeout(() => {
+        if (typeof updateNavigationState === 'function') {
+            updateNavigationState();
+        }
+    }, 100);
+    
+    // ✅ NUEVO: Agregar clase para identificar que estamos en imagen
+    overlay.setAttribute('data-navigation-level', 'image');
 }
 /**
  * Formatea las especificaciones como lista HTML con viñetas
@@ -1692,9 +1733,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         await cargarProductosConPrecargaPersistente();
         
         // 6. Configurar eventos básicos
+        inicializarSistemaHistorial();
         configurarManejoBotonBack();
         setupBackButtonStateMachine(); // ✅ NUEVO
-        inicializarManejoHistorial();
         configurarEventListeners();
         //... específica para PWA/TWA
         configurarBackButtonPWA();
@@ -2449,145 +2490,161 @@ async function cargarProductosConPrecargaPersistente(forzarActualizacion = false
 // SISTEMA DE MANEJO DEL BOTÓN BACK/BACKSPACE
 // =============================================
 
+function updateNavigationState() {
+    // Verificar imagen maximizada
+    const maximizedOverlay = document.querySelector('.maximized-overlay');
+    const isImageMaximized = maximizedOverlay && maximizedOverlay.classList.contains('active');
+        
+    // Verificar modal
+    const modal = document.getElementById('productModal');
+    const isModalOpen = modal && modal.style.display === 'block';
+        
+    // Actualizar estado
+    if (isImageMaximized) {
+        AppState.navigationState.level = 'image';
+    } else if (isModalOpen) {
+        AppState.navigationState.level = 'modal';
+    } else {
+        AppState.navigationState.level = 'list';
+    }
+        
+    console.log('📍 Nivel de navegación:', AppState.navigationState.level);
+}
 /**
- * Configura el manejo del botón back/backspace para móviles - VERSIÓN MEJORADA
+ * Configura el manejo del botón back/backspace - VERSIÓN JERÁRQUICA
  */
 function configurarManejoBotonBack() {
-    let backPressed = false;
     let backPressTimeout = null;
     
-    // 1. Manejar evento popstate (cuando se presiona back en navegador)
+    // 1. Actualizar estado de navegación constantemente
+    
+    
+    // 2. Monitorear cambios en la UI
+    const observer = new MutationObserver(function(mutations) {
+        updateNavigationState();
+    });
+    
+    // Observar modal
+    const modal = document.getElementById('productModal');
+    if (modal) {
+        observer.observe(modal, { 
+            attributes: true, 
+            attributeFilter: ['style'] 
+        });
+    }
+    
+    // Observar cambios en el body para imagen maximizada
+    observer.observe(document.body, { 
+        childList: true,
+        subtree: false 
+    });
+    
+    // 3. Manejar evento popstate (botón back del navegador/móvil)
     window.addEventListener('popstate', function(event) {
-        console.log('🔙 Botón back detectado (popstate)');
+        console.log('🔙 Botón back presionado. Nivel:', AppState.navigationState.level);
         
-        // ✅ NUEVO: Primero verificar si hay imagen maximizada
-        const maximizedOverlay = document.querySelector('.maximized-overlay');
-        if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
-            console.log('🖼️ Imagen maximizada detectada, cerrando...');
-            event.preventDefault();
-            event.stopPropagation();
-            
-            cerrarImagenMaximizada();
-            return false;
+        // Actualizar estado antes de procesar
+        updateNavigationState();
+        
+        // Prevenir navegación por defecto
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Manejar según el nivel actual
+        switch (AppState.navigationState.level) {
+            case 'image':
+                // Nivel 1: Cerrar solo la imagen maximizada
+                console.log('🖼️ Cerrando imagen maximizada...');
+                cerrarSoloImagenMaximizada();
+                break;
+                
+            case 'modal':
+                // Nivel 2: Cerrar el modal completo
+                console.log('📦 Cerrando modal de producto...');
+                cerrarModalCompleto();
+                break;
+                
+            case 'list':
+                // Nivel 3: Estamos en la lista principal
+                manejarSalidaDeApp();
+                break;
         }
         
-        // Si hay un modal abierto, cerrarlo en lugar de navegar
-        const modal = document.getElementById('productModal');
-        if (modal && modal.style.display === 'block') {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            cerrarModalYRestaurarEstado();
-            return false;
-        }
-        
-        // Si estamos en modo standalone (PWA), evitar salir
-        if (window.matchMedia('(display-mode: standalone)').matches || 
-            window.navigator.standalone === true) {
-            
-            if (!backPressed) {
-                event.preventDefault();
-                backPressed = true;
-                
-                mostrarNotificacion('Presiona de nuevo para salir de la app', 'info');
-                
-                // Limpiar timeout anterior si existe
-                if (backPressTimeout) clearTimeout(backPressTimeout);
-                
-                backPressTimeout = setTimeout(() => {
-                    backPressed = false;
-                }, 2000);
-                
-                return false;
-            }
-        }
+        // Actualizar estado después de procesar
+        setTimeout(updateNavigationState, 100);
     });
     
-    // 2. Manejar tecla Backspace (escritorio) - VERSIÓN MEJORADA
+    // 4. Manejar teclas Backspace/Escape (escritorio)
     document.addEventListener('keydown', function(e) {
-        // Backspace o Escape
-        if (e.key === 'Backspace' || e.key === 'Escape' || e.keyCode === 8 || e.keyCode === 27) {
-            // ✅ NUEVO: Primero verificar imagen maximizada
-            const maximizedOverlay = document.querySelector('.maximized-overlay');
-            if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('⌨️ Tecla Backspace/Escape detectada, cerrando imagen maximizada');
-                cerrarImagenMaximizada();
-                return;
-            }
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            updateNavigationState();
             
-            // Luego verificar modal
-            const modal = document.getElementById('productModal');
-            if (modal && modal.style.display === 'block') {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('⌨️ Tecla Backspace/Escape detectada, cerrando modal');
-                cerrarModalYRestaurarEstado();
+            switch (AppState.navigationState.level) {
+                case 'image':
+                    e.preventDefault();
+                    cerrarSoloImagenMaximizada();
+                    break;
+                    
+                case 'modal':
+                    e.preventDefault();
+                    cerrarModalCompleto();
+                    break;
+                    
+                default:
+                    // En lista, no hacer nada con Escape
+                    break;
             }
         }
     });
     
-    // 3. Manejar gestos swipe back en iOS/Android - VERSIÓN MEJORADA
+    // 5. Manejar gestos swipe back (iOS/Android)
     let touchStartX = 0;
-    let touchStartY = 0;
-    let isInMaximizedMode = false;
+    let isProcessingSwipe = false;
     
     document.addEventListener('touchstart', function(e) {
-        // ✅ NUEVO: Verificar si estamos en modo imagen maximizada
-        const maximizedOverlay = document.querySelector('.maximized-overlay');
-        isInMaximizedMode = maximizedOverlay && maximizedOverlay.classList.contains('active');
-        
-        if (!isInMaximizedMode) {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        }
+        // Solo detectar swipes desde el borde izquierdo
+        touchStartX = e.touches[0].clientX;
     }, { passive: true });
     
     document.addEventListener('touchend', function(e) {
-        if (isInMaximizedMode) {
-            // ✅ NUEVO: En modo imagen maximizada, manejar swipe back diferente
-            const touchEndX = e.changedTouches[0].clientX;
-            const diffX = touchStartX - touchEndX;
-            
-            if (diffX > 100) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('👆 Swipe back detectado en imagen maximizada');
-                cerrarImagenMaximizada();
-            }
-            
-            isInMaximizedMode = false;
-            return;
-        }
-        
-        if (!touchStartX) return;
+        if (isProcessingSwipe) return;
         
         const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        
         const diffX = touchStartX - touchEndX;
-        const diffY = Math.abs(touchStartY - touchEndY);
         
-        // Detectar swipe desde el borde izquierdo (gesto típico de "back" en iOS/Android)
-        if (touchStartX < 50 && diffX > 100 && diffY < 50) {
-            const modal = document.getElementById('productModal');
+        // Swipe desde el borde izquierdo (> 100px)
+        if (touchStartX < 50 && diffX > 100) {
+            isProcessingSwipe = true;
             
-            if (modal && modal.style.display === 'block') {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('👆 Swipe back detectado desde borde izquierdo');
-                cerrarModalYRestaurarEstado();
+            updateNavigationState();
+            
+            switch (AppState.navigationState.level) {
+                case 'image':
+                    e.preventDefault();
+                    cerrarSoloImagenMaximizada();
+                    break;
+                    
+                case 'modal':
+                    e.preventDefault();
+                    cerrarModalCompleto();
+                    break;
+                    
+                case 'list':
+                    manejarSalidaDeApp();
+                    break;
             }
+            
+            setTimeout(() => {
+                isProcessingSwipe = false;
+                touchStartX = 0;
+            }, 500);
         }
         
         touchStartX = 0;
-        touchStartY = 0;
     }, { passive: false });
+    
+    // Inicializar estado
+    updateNavigationState();
 }
 /**
  * Cierra la imagen maximizada
@@ -2646,18 +2703,6 @@ function cerrarModalYRestaurarEstado() {
     }
 }
 /**
- * Inicializa el sistema de manejo de historial
- */
-function inicializarManejoHistorial() {
-    // Agregar estado inicial al historial
-    if (window.history && window.history.pushState) {
-        window.history.replaceState({ page: 'catalogo' }, '', window.location.href);
-    }
-    
-    // Escuchar cambios en la visibilidad del modal para manejar historial
-    observarCambiosModal();
-}
-/**
  * Observa cambios en el modal para manipular el historial
  */
 function observarCambiosModal() {
@@ -2697,23 +2742,95 @@ function configurarCierreModal() {
     });
 }
 /**
- * Cierra el modal de manera completa
+ * Cerrar SOLO la imagen maximizada (mantener modal abierto)
+ */
+function cerrarSoloImagenMaximizada() {
+    const maximizedOverlay = document.querySelector('.maximized-overlay');
+    
+    if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
+        // Buscar y hacer clic en el botón de cerrar
+        const closeBtn = maximizedOverlay.querySelector('.maximized-close');
+        if (closeBtn) {
+            closeBtn.click();
+        } else {
+            // Fallback manual
+            maximizedOverlay.classList.remove('active');
+            setTimeout(() => {
+                if (maximizedOverlay.parentNode) {
+                    maximizedOverlay.parentNode.removeChild(maximizedOverlay);
+                }
+            }, 300);
+        }
+        
+        console.log('✅ Imagen maximizada cerrada (modal permanece abierto)');
+        mostrarNotificacion('Imagen cerrada', 'info', 1500);
+    }
+}
+/**
+ * Cerrar el modal completo (volver a lista)
  */
 function cerrarModalCompleto() {
     const modal = document.getElementById('productModal');
     
     if (modal && modal.style.display === 'block') {
-        modal.style.display = 'none';
-        
-        // Restaurar scroll
-        document.body.style.overflow = 'auto';
-        
-        // Si estamos en el historial del modal, retroceder
-        if (window.history.state && window.history.state.modalOpen) {
-            window.history.back();
+        // Primero cerrar imagen maximizada si está abierta
+        const maximizedOverlay = document.querySelector('.maximized-overlay');
+        if (maximizedOverlay && maximizedOverlay.classList.contains('active')) {
+            cerrarSoloImagenMaximizada();
+            return; // Salir, el próximo back cerrará el modal
         }
         
-        console.log('✅ Modal cerrado normalmente');
+        // Cerrar el modal
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        console.log('✅ Modal cerrado (volviendo a lista)');
+        mostrarNotificacion('Producto cerrado', 'info', 1500);
+        
+        // Actualizar historial
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ listView: true }, '', window.location.href);
+        }
+    }
+}
+/**
+ * Manejar salida de la aplicación (doble tap para salir)
+ */
+function manejarSalidaDeApp() {
+    AppState.navigationState.backPressCount++;
+    
+    console.log(`🔄 Contador de back: ${AppState.navigationState.backPressCount}`);
+    
+    if (AppState.navigationState.backPressCount === 1) {
+        // Primer back: mostrar mensaje
+        mostrarNotificacion('Presiona de nuevo para salir de la aplicación', 'info', 2000);
+        
+        // Resetear contador después de 2 segundos
+        setTimeout(() => {
+            AppState.navigationState.backPressCount = 0;
+            console.log('🔄 Contador de back reseteado');
+        }, 2000);
+        
+        // Prevenir salida
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ preventExit: true }, '', window.location.href);
+        }
+    } 
+    else if (AppState.navigationState.backPressCount >= 2) {
+        // Segundo back: salir
+        console.log('🚪 Saliendo de la aplicación...');
+        
+        // En PWA/TWA, intentar cerrar la app
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            if (window.navigator.app) {
+                window.navigator.app.exitApp();
+            } else if (window.close) {
+                window.close();
+            }
+        }
+        
+        // En navegador, permitir navegación atrás
+        AppState.navigationState.backPressCount = 0;
     }
 }
 // Función específica para PWA/TWA
@@ -2799,4 +2916,20 @@ function setupBackButtonStateMachine() {
     if (modal) {
         observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
     }
+}
+
+// función para inicializar historial
+function inicializarSistemaHistorial() {
+    // Estado inicial
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState({ 
+            level: 'list',
+            timestamp: Date.now()
+        }, '', window.location.href);
+    }
+    
+    // Escuchar cambios de estado
+    window.addEventListener('popstate', function(event) {
+        console.log('📝 Cambio de estado del historial:', event.state);
+    });
 }
