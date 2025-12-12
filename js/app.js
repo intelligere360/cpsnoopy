@@ -2530,7 +2530,7 @@ function cerrarModalYRestaurarEstado() {
         document.body.style.overflow = 'auto';
         
         // Notificar al usuario
-        mostrarNotificacion('Modal cerrado', 'info');
+        console.log('Modal cerrado', 'info');
         
         // Agregar una entrada al historial para prevenir salir
         if (window.history && window.history.pushState) {
@@ -2633,4 +2633,5 @@ function configurarBackButtonPWA() {
         
         console.log('📱 Botón back de Android configurado para TWA');
     }
+
 }
