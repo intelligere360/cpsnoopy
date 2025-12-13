@@ -1339,7 +1339,7 @@ input, textarea {
     /* Efectos */
     box-shadow: 0 2px 8px rgba(255, 71, 87, 0.6);
     transform: rotate(45deg);
-    z-index: 9999;
+    z-index: 500;
     
     /* Mejor legibilidad */
     line-height: 1.1;
@@ -1361,7 +1361,7 @@ input, textarea {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     box-shadow: 0 3px 10px rgba(255, 107, 107, 0.5);
-    z-index: 100;
+    z-index: 600;
     animation: pulse-nuevo 2s infinite;
     transform: rotate(45deg);
     line-height: 1.2;
