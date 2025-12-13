@@ -308,14 +308,6 @@ body {
     background: #e74c3c;
 }
 
-/* PRODUCT DETAIL IN MODAL */
-.product-detail {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    padding: 30px;
-}
-
 .product-image-detail {
     background: #f8f9fa;
     border-radius: 8px;

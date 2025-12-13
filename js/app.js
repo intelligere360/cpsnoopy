@@ -841,7 +841,6 @@ async function mostrarDetallesProducto(productoId) {
         <div class="product-detail">
             <div class="detail-images">
                 <div class="carousel-skeleton">
-                    <div class="skeleton-image-large"></div>
                 </div>
                 ${badgeNuevoModal}
             </div>
@@ -1026,7 +1025,7 @@ function detectarDispositivoMovil() {
  * Crea el carrusel usando imágenes desde la cache de IndexedDB
  */
 async function crearCarruselConCache(producto) {
-    const detailImages = document.querySelector('.detail-images');
+    const detailImages = document.querySelector('.carousel-skeleton');
     
     if (!producto.imagenes || producto.imagenes.length === 0) {
         detailImages.innerHTML = `<div class="no-image">Imagen no disponible</div>`;
@@ -1091,9 +1090,6 @@ async function crearCarruselConCache(producto) {
             <button class="carousel-btn carousel-prev">‹</button>
             <button class="carousel-btn carousel-next">›</button>
         ` : '';
-
-        // ✅ NUEVO: Badge "NUEVO" para el carrusel
-        const badgeNuevoModal = producto.nuevo ? `<div class="modal-badge">¡Como Nuevo!</div>` : '';
         
         // ✅ NUEVO: Reemplazar el esqueleto con el carrusel real
         detailImages.innerHTML = `
@@ -1108,7 +1104,6 @@ async function crearCarruselConCache(producto) {
                     </div>
                 ` : ''}
             </div>
-            ${badgeNuevoModal}
         `;
         
         // ✅ NUEVO: Inicializar el carrusel inmediatamente
@@ -2694,9 +2689,6 @@ function cerrarModalYRestaurarEstado() {
         // Restaurar scroll del body
         document.body.style.overflow = 'auto';
         
-        // Notificar al usuario
-        mostrarNotificacion('Vista de producto cerrada', 'info');
-        
         // Agregar una entrada al historial para prevenir salir
         if (window.history && window.history.pushState) {
             window.history.pushState({ modalClosed: true }, '', window.location.href);
@@ -2788,7 +2780,6 @@ function cerrarModalCompleto() {
         document.body.style.overflow = 'auto';
         
         console.log('✅ Modal cerrado (volviendo a lista)');
-        mostrarNotificacion('Producto cerrado', 'info', 1500);
         
         // Actualizar historial
         if (window.history && window.history.pushState) {
