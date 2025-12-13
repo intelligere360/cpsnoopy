@@ -800,6 +800,32 @@ async function mostrarDetallesProducto(productoId) {
     AppState.productoActual = producto;
     
     const modalContent = document.getElementById('modalContent');
+    const modal = document.getElementById('productModal');
+    
+    if (!modalContent || !modal) {
+        console.error('❌ Elementos del modal no encontrados en el DOM');
+        return;
+    }
+    
+    // ✅ NUEVO: Mostrar el modal ANTES de cargar contenido (feedback inmediato)
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // ✅ Actualizar estado de navegación INMEDIATAMENTE
+    AppState.navigationState.level = 'modal';
+    AppState.navigationState.productId = productoId;
+    
+    console.log('📍 Navegación: list → modal (ID:', productoId, ')');
+    
+    // ✅ SOLO UN pushState - Elimina el segundo pushState duplicado
+    if (window.history && window.history.pushState) {
+        window.history.pushState({ 
+            modalOpen: true, 
+            productId: producto.id,
+            productName: producto.nombre,
+            timestamp: Date.now()
+        }, '', window.location.href);
+    }
 
     // ✅ NUEVO: Mostrar u ocultar precio según configuración
     const mostrarPrecios = debeMostrarPrecios();
@@ -842,29 +868,6 @@ async function mostrarDetallesProducto(productoId) {
     
     // ✅ NUEVO: Configurar todos los botones de contacto
     configurarBotonesContacto(producto, str_precio_saber);
-
-    // ✅ NUEVO: Manipular historial cuando se abre el modal
-    if (window.history && window.history.pushState) {
-        window.history.pushState({ 
-            modalOpen: true, 
-            productId: producto.id,
-            productName: producto.nombre 
-        }, '', window.location.href);
-    }
-
-    document.getElementById('productModal').style.display = 'block';
-
-    // ✅ NUEVO: Prevenir scroll del body
-    document.body.style.overflow = 'hidden';
-
-    // ✅ NUEVO: Actualizar estado de navegación
-    AppState.navigationState.level = 'modal';
-    AppState.navigationState.productId = productoId;
-    
-    document.getElementById('productModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    
-    console.log('📍 Navegación: list → modal');
 }
 
 // ✅ FUNCIÓN MEJORADA: Configurar todos los botones de contacto
