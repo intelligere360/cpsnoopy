@@ -1,7 +1,7 @@
 {
-    "version": "2.0.7",
-    "version_code": "20251213-001",
-    "last_updated": "2025-12-33T00:10:00Z",
+    "version": "2.0.8",
+    "version_code": "20251213-002",
+    "last_updated": "2025-12-13T12:13:00Z",
     "force_update": false,
     "mostrar_precios": false,
     "idioma": "es",
@@ -11,5 +11,4 @@
         "email": "ramonsimancas61@gmail.com",
         "vendedor": "Peter Snoopy: DE TODO UN POCO"
     }
-
 }
