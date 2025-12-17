@@ -1670,9 +1670,6 @@ function inicializarCarrusel(producto) {
             updateNavigationState();
         }
     }, 100);
-    
-    // ✅ NUEVO: Agregar clase para identificar que estamos en imagen
-    overlay.setAttribute('data-navigation-level', 'image');
 }
 /**
  * Formatea las especificaciones como lista HTML con viñetas

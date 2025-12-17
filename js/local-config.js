@@ -11,7 +11,7 @@ const LOCAL_CONFIG = {
     
     // Sistema de versionado
     VERSION_KEY: 'app_version_cache',
-    CACHE_VERSION: 'v2.0.9', // Debe coincidir con config.json
+    CACHE_VERSION: 'v2.0.10', // Debe coincidir con config.json
     CHECK_INTERVAL: 3600000, // 1 hora en milisegundos
 };
 
