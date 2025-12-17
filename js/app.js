@@ -857,9 +857,6 @@ async function mostrarDetallesProducto(productoId) {
         </div>
     `;
     
-    // ✅ NUEVO: Crear carrusel con imágenes cacheadas
-    await crearCarruselConCache(producto);
-    
     // Actualizar enlaces de contacto
     const str_precio_saber = AppState.config.mostrar_precios ? 
         formatearPrecio(producto.precioMin, producto.precioMax) : 
@@ -867,6 +864,9 @@ async function mostrarDetallesProducto(productoId) {
     
     // ✅ NUEVO: Configurar todos los botones de contacto
     configurarBotonesContacto(producto, str_precio_saber);
+    
+    // ✅ NUEVO: Crear carrusel con imágenes cacheadas
+    await crearCarruselConCache(producto);
 }
 
 // ✅ FUNCIÓN MEJORADA: Configurar todos los botones de contacto
