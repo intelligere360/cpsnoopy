@@ -1,7 +1,7 @@
 // Sistema de cache de imágenes con IndexedDB
 const ImageCacheDB = {
     dbName: 'ImageCacheDB',
-    storeName: 'images',
+    storeName: 'images_cpsnoopy',
     version: 1,
 
     async openDB() {

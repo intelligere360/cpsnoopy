@@ -1,5 +1,5 @@
 // sw.js - CON SISTEMA DE VERSIONADO
-const APP_VERSION = 'v2.0.10'; // Actualizar manualmente aquí también
+const APP_VERSION = 'v2.0.11'; // Actualizar manualmente aquí también
 const CACHE_NAME = 'catalogo-peter-snoopy-local-v1.0';
 const STATIC_CACHE = `static-catalogo-peter-snoopy-${APP_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-catalogo-peter-snoopy-${APP_VERSION}`;
@@ -85,7 +85,7 @@ async function updateStaticCache(newVersion) {
             './js/notifications-helper.js',
             './js/version-manager.js',
             './data/config.json',
-            './data/productos.json',
+            './data/products.json',
             './css/style.css'
         ];
         
