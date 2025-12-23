@@ -1,6 +1,6 @@
 // sw.js - CON SISTEMA DE VERSIONADO
 const SITE_NAME = 'cpsnoopy';
-const APP_VERSION = 'v2.0.13'; // Actualizar manualmente aquí también
+const APP_VERSION = 'v2.0.14'; // Actualizar manualmente aquí también
 const CACHE_NAME = 'catalogo-peter-snoopy-local-v1.0';
 const STATIC_CACHE = `static-catalogo-peter-snoopy-${APP_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-catalogo-peter-snoopy-${APP_VERSION}`;
