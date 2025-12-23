@@ -96,7 +96,6 @@ const ImageCacheDB = {
 // app.js - VERSIÓN CORREGIDA CON SCROLL FUNCIONAL
 let productos = [];
 let productoActual = null;
-const STATIC_CACHE = 'static-catalogo-v1.1';
 
 // =============================================
 // CONFIGURACIÓN DE CONTACTO Y NOTIFICACIONES
@@ -2970,4 +2969,5 @@ function inicializarSistemaHistorial() {
     window.addEventListener('popstate', function(event) {
         console.log('📝 Cambio de estado del historial:', event.state);
     });
+
 }
