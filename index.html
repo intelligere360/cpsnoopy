@@ -164,7 +164,7 @@
                     
                     // Iniciar verificador de versiones
                     if (window.versionManager) {
-                        window.versionManager.startPeriodicCheck();
+                        window.versionManager.startPeriodicCheck(1800000);
                         
                         // Escuchar actualizaciones
                         window.versionManager.onUpdate((newVersion, oldVersion) => {
