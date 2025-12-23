@@ -150,9 +150,12 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('./sw.js?v=' + (new Date().getTime()))
+                // ✅ CAMBIAR a sw-cpsnoopy.js con scope específico
+                navigator.serviceWorker.register('./sw-cpsnoopy.js', {
+                    scope: './'
+                })
                 .then(function(registration) {
-                    console.log('✅ Service Worker registrado:', registration.scope);
+                    console.log('✅ Service Worker CPSnoopy registrado:', registration.scope);
                     
                     // Escuchar mensajes del Service Worker
                     navigator.serviceWorker.addEventListener('message', event => {
@@ -177,7 +180,7 @@
                     }
                 })
                 .catch(function(error) {
-                    console.log('❌ Error registrando Service Worker:', error);
+                    console.log('❌ Error registrando Service Worker de CPSnoopy:', error);
                 });
             });
         }
